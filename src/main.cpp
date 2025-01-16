@@ -387,12 +387,37 @@ class Scene {
 				++prev;
 			}
 		}
+	
+		template <typename... ComponentTypes, typename Func>
+		void eachE(Func&& func) {
+			registry.template view<ComponentTypes...>().template each([this, func = std::forward<Func>(func)](auto e, auto&... components) {
+					auto *entityP = get(e);
+					if (entityP) {
+						auto &entity = *entityP;
+
+						func(entity, components...);
+					}
+			});
+		}
 
 		template <typename... ComponentTypes, typename Func>
-		void each(Func func)
-		{
-			registry.template view<ComponentTypes...>().template each<Func>(std::move(func));
+		void each(Func&& func) {
+			if constexpr (std::is_invocable_v<Func, Entity, const ComponentTypes&...>) {
+				registry.template view<ComponentTypes...>().template each([func = std::forward<Func>(func)](auto e, auto&... components) {
+						auto *entityP = get(e);
+						if (entityP) {
+							auto &entity = *entityP;
+
+							func(entity, components...);
+						}
+				});
+			} else {
+				registry.template view<ComponentTypes...>().template each([func = std::forward<Func>(func)](auto, auto&... components) {
+						func(components...);
+				});
+			}
 		}
+
 
 };
 
@@ -466,13 +491,13 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 
 	scene.each<TransformComponent, ColliderComponent>([&offsets, &transform, &found, &count](auto &tilePos, auto &collider) {
 		for (const auto &offset : offsets) {
-			const Rectangle collision = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
-
-			if (CheckCollisionPointRec(Vector2Add(transform, offset), collision)) {
+			const Rectangle other = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
+			
+			if (CheckCollisionPointRec(Vector2Add(transform, offset), other)) {
 				if (found.size() <= count) {
 					return;
 				}
-				found[count++] = collision;
+				found[count++] = other;
 			}
 		}
 	});
@@ -486,8 +511,9 @@ bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
 
 	for (const auto &collision : found) {
 		result = GetCollisionRec(collider, collision);
-		
-		return result.width > 0 && result.height > 0;
+		if (result.width > 0 && result.height > 0) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -499,15 +525,15 @@ static inline Rectangle tcToRect(TransformComponent transform, ColliderComponent
 
 void handleLocomotion(Scene &scene)
 {
-	scene.each<TransformComponent, LocomotionComponent, ColliderComponent>([&scene](auto entity, const auto &transform, const auto &locomotion, const auto &collider) {
+	scene.eachE<TransformComponent, LocomotionComponent, ColliderComponent>([&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
 		Rectangle collision;
 
-		/*if (Vector2LengthSqr(locomotion.vel) != 0) {
+		if (Vector2LengthSqr(locomotion.vel) != 0) {
 			entity.template update<TransformComponent>([&locomotion](auto &transform) {
 				transform.pos.x += locomotion.vel.x * locomotion.multiplier;
 			});
 
-			if (isColliding(scene, tcToRect(transform, collider), &collision)) {
+			if (isColliding(scene, tcToRect(transform, collider), collision)) {
 				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
 					transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
 				});
@@ -517,12 +543,12 @@ void handleLocomotion(Scene &scene)
 				transform.pos.y += locomotion.vel.y * locomotion.multiplier;
 			});
 
-			if (isColliding(scene, tcToRect(transform, collider), &collision)) {
+			if (isColliding(scene, tcToRect(transform, collider), collision)) {
 				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
 					transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
 				});
 			}
-		}*/
+		}
 	});
 }
 
