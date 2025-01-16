@@ -23,6 +23,111 @@
 #define WALK_SPEED 120.0f
 #define SPRINT_SPEED WALK_SPEED * 2
 
+class Entity {
+	private:
+		entt::registry *registry;
+		entt::entity entity;
+
+	public:
+		Entity(entt::registry *r) : registry(r) {
+			entity = registry->create();
+		}
+
+		~Entity() {
+			registry->destroy(entity);
+		}
+		
+		operator entt::entity() const
+		{
+			return entity;
+		}
+
+		bool operator==(const Entity &other) const
+		{
+			return (registry == other.registry) && (entity == other.entity);
+		}
+
+		template<typename Type, typename... Args>
+			decltype(auto) add(Args &&...args)
+			{
+				return registry->emplace<Type>(entity, std::forward<Args>(args)...);
+			}
+
+		template<typename Type, typename... Args>
+			decltype(auto) update(Args &&...args)
+			{
+				return registry->patch<Type>(entity, std::forward<Args>(args)...);
+			}
+
+		template<typename Type>
+			decltype(auto) get() const
+			{
+				return registry->get<Type>(entity);
+			}
+
+		template<typename... Args>
+			decltype(auto) has() const
+			{
+				return registry->all_of<Args...>(entity);
+			}
+
+		template<typename... Args>
+			decltype(auto) remove()
+			{
+				return registry->remove<Args...>(entity);
+			}
+};
+
+struct CameraComponent {
+	Camera2D cam = { 0 };
+
+	Entity* target = nullptr;
+	Vector2 offset = { 0 };
+};
+
+struct TransformComponent {
+	Vector2 pos = { 0 };
+
+	operator Vector2() const { return pos; }
+};
+
+struct ColoredRectComponent {
+	Color color = DARKPURPLE;
+	Vector2 size = { 0 };
+};
+
+struct LocomotionComponent {
+	Vector2 vel = { 0 };
+	float targetSpeed = 0;
+	float multiplier = 1;
+
+	void setVelocity(Vector2 v)
+	{
+		vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
+		vel = Vector2Scale(vel, GetFrameTime());
+	}
+};
+
+struct PlayerSteeringComponent {
+	int dummy = 0;
+};
+
+struct TestSteeringComponent {
+	int speed = WALK_SPEED;
+};
+
+struct ColliderComponent {
+	Vector2 size = { 0 };
+};
+
+struct RenderableTag {
+	int z = 0;
+
+	/* TODO: deprecate as soon as EnTT 
+	 * implements enabled/disabled components */
+	bool render = true;
+};
+
 typedef std::pair<int, int> SpatialPair;
 
 template <typename T>
@@ -72,7 +177,7 @@ class SpatialHashMap {
 			}
 		}
 	public:
-		SpatialHashMap(SpatialPair b, SpatialPair u) : unit(u) {}
+		SpatialHashMap(SpatialPair u) : unit(u) {}
 
 		void insert(T item, Rectangle rect)
 		{
@@ -146,57 +251,6 @@ static const inline Rectangle GetCameraView(Camera2D &camera)
 	return view;
 }
 
-class Entity {
-	private:
-		entt::registry *registry;
-		entt::entity entity;
-
-	public:
-
-		Entity(entt::registry *r) : registry(r) {
-			entity = registry->create();
-		}
-
-		~Entity() {
-			registry->destroy(entity);
-		}
-	
-		bool operator==(const Entity &other) const
-		{
-			return (registry == other.registry) && (entity == other.entity);
-		}
-
-		template<typename Type, typename... Args>
-			decltype(auto) add(Args &&...args)
-			{
-				return registry->emplace<Type>(entity, std::forward<Args>(args)...);
-			}
-
-		template<typename Type, typename... Args>
-			decltype(auto) update(Args &&...args)
-			{
-				return registry->patch<Type>(entity, std::forward<Args>(args)...);
-			}
-
-		template<typename Type>
-			decltype(auto) get() const
-			{
-				return registry->get<Type>(entity);
-			}
-
-		template<typename... Args>
-			decltype(auto) has() const
-			{
-				return registry->all_of<Args...>(entity);
-			}
-
-		template<typename... Args>
-			decltype(auto) remove()
-			{
-				return registry->remove<Args...>(entity);
-			}
-};
-
 template <typename T>
 struct RenderableItem {
 	T item;
@@ -209,174 +263,140 @@ struct RenderableItem {
 };
 
 #define SPATIAL_UNIT 50
+
 class Scene {
 	private:
 		entt::registry registry;
 
-		static const RenderableItem<Entity> inline eToRI(Entity entity)
+		static const RenderableItem<Entity*> inline eToRI(Entity &entity)
 		{
-			return RenderableItem<Entity>{ entity, entity.get<RenderableTag>().z };
+			return { &entity, entity.get<RenderableTag>().z };
 		}
 
-		static const RenderableItem<Entity> inline eToRI(Entity entity, int z)
+		static const RenderableItem<Entity*> inline eToRI(Entity &entity, int z)
 		{
-			return RenderableItem<Entity>{ entity, z };
+			return { &entity, z };
 		}
 
-		void onDestroyRenderable(SpatialHashMap<RenderableItem<Entity>> &renderables, entt::registry& registry, entt::entity e)
+		void onDestroyRenderable(entt::registry& registry, entt::entity e)
 		{
-			Entity entity(&registry, e);
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
 
-			renderables.remove(eToRI(entity));
+				renderables.remove(eToRI(entity));
+			}
 		}
 
-		void onConstructRenderable(SpatialHashMap<RenderableItem<Entity>> &renderables, entt::registry& registry, entt::entity e)
+		void onConstructRenderable(entt::registry& registry, entt::entity e)
 		{
-			Entity entity(&registry, e);
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
 
-			if (entity.has<TransformComponent>()) {
-				auto &transform = entity.get<TransformComponent>();
+				if (entity.has<TransformComponent>()) {
+					auto &transform = entity.get<TransformComponent>();
 
-				if (entity.has<ColoredRectComponent>()) {
-					auto &coloredRect = entity.get<ColoredRectComponent>();
+					if (entity.has<ColoredRectComponent>()) {
+						auto &coloredRect = entity.get<ColoredRectComponent>();
 
-					renderables.insert(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
+						renderables.insert(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
+					}
 				}
 			}
 		}
 
-		void onUpdateTransform(SpatialHashMap<RenderableItem<Entity>> &renderables, entt::registry& registry, entt::entity e)
+		void onUpdateTransform(entt::registry& registry, entt::entity e)
 		{
-			Entity entity(&registry, e);
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
 			
-			if (entity.has<RenderableTag>()) {
-				auto &transform = entity.get<TransformComponent>();
+				if (entity.has<RenderableTag>()) {
+					auto &transform = entity.get<TransformComponent>();
 
-				if (entity.has<ColoredRectComponent>()) {
-					auto &coloredRect = entity.get<ColoredRectComponent>();
+					if (entity.has<ColoredRectComponent>()) {
+						auto &coloredRect = entity.get<ColoredRectComponent>();
 
-					renderables.update(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
+						renderables.update(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
+					}
 				}
 			}
 		}
 
-		void onUpdateRenderable(SpatialHashMap<RenderableItem<Entity>> &renderables, entt::registry& registry, entt::entity e)
+		void onUpdateRenderable(entt::registry& registry, entt::entity e)
 		{
-			Entity entity(&registry, e);
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
 
-			if (entity.has<TransformComponent>()) {
-				auto &transform = entity.get<TransformComponent>();
+				if (entity.has<TransformComponent>()) {
+					auto &transform = entity.get<TransformComponent>();
 
-				if (entity.has<ColoredRectComponent>()) {
-					auto &coloredRect = entity.get<ColoredRectComponent>();
-					const auto renderable = eToRI(entity);
-					
-					/* If you observe RenderableItem, 
-					 * we don't need the Z values to equal for a match. 
-					 * Thus we don't need the old one. */
-					renderables.replace(renderable, renderable);
+					if (entity.has<ColoredRectComponent>()) {
+						auto &coloredRect = entity.get<ColoredRectComponent>();
+						const auto renderable = eToRI(entity);
+						
+						/* If you observe RenderableItem, 
+						 * we don't need the Z values to equal for a match. 
+						 * Thus we don't need the old one. */
+						renderables.replace(renderable, renderable);
+					}
 				}
 			}
 		}
 
 	public:
-		std::vector<Entity> entities;
-		SpatialHashMap<RenderableItem<Entity>> renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT));
+		std::forward_list<Entity> entities;
+		SpatialHashMap<RenderableItem<Entity*>> renderables;
 
-		Scene() {
+		Scene() : renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)) {
 			/* TODO: reactive storage https://github.com/skypjack/entt/wiki/Entity-Component-System#storage */
-			registry.on_construct<RenderableTag>().connect<&onConstructRenderable>(renderables);
-			registry.on_destroy<RenderableTag>().connect<&onDestroyRenderable>(renderables);
-			registry.on_update<RenderableTag>().connect<&onUpdateRenderable>(renderables);
-			registry.on_update<TransformComponent>().connect<&onUpdateTransform>(renderables);
+			registry.on_construct<RenderableTag>().connect<&Scene::onConstructRenderable>(this);
+			registry.on_destroy<RenderableTag>().connect<&Scene::onDestroyRenderable>(this);
+			registry.on_update<RenderableTag>().connect<&Scene::onUpdateRenderable>(this);
+			registry.on_update<TransformComponent>().connect<&Scene::onUpdateTransform>(this);
 		}
 		
 		Entity& add()
 		{
-			return entities.emplace_back(&registry);
-		}
-
-		void remove(const Entity &entity)
-		{
-			if (std::find(entities.begin(), entities.end(), entity) != entities.end()) {
-				entities.erase(it);
-			}
+			return entities.emplace_front(&registry);
 		}
 		
-		template <typename... ComponentTypes>
-		void each(std::function<void(Entity&, ComponentTypes&...)> lambda)
+		Entity* get(entt::entity e)
 		{
-			auto view = registry->view<ComponentTypes...>();
+			auto it = std::find_if(entities.begin(), entities.end(), [&e](auto &entity) {
+					return (entt::entity)entity == e;
+				});
 
-			view.each([&](entt::entity e, ComponentTypes&... components) {
-					Entity entity(registry, e);
+			if (it == entities.end()) {
+				return nullptr;
+			}
 
-					lambda(entity, components...);
-			});
+			return &(*it);
 		}
 
-		template <typename... ComponentTypes>
-		void each(std::function<void(const ComponentTypes&...)> lambda)
+		void remove(Entity &entity)
 		{
-			auto view = registry->view<ComponentTypes...>();
-
-			view.each([&](ComponentTypes&... components) {
-					lambda(components...);
-			});
+			auto prev = entities.before_begin();
+			for (auto it = entities.begin(); it != entities.end(); ++it) {
+				if (*it == entity) {
+					entities.erase_after(prev);
+					return;
+				}
+				++prev;
+			}
 		}
+
+		template <typename... ComponentTypes, typename Func>
+		void each(Func func)
+		{
+			registry.template view<ComponentTypes...>().template each<Func>(std::move(func));
+		}
+
 };
 
-struct CameraComponent {
-	Camera2D cam = { 0 };
-
-	Entity* target = nullptr;
-	Vector2 offset = { 0 };
-};
-
-struct TransformComponent {
-	Vector2 pos = { 0 };
-
-	operator Vector2() const { return pos; }
-};
-
-struct ColoredRectComponent {
-	Color color = DARKPURPLE;
-	Vector2 size = { 0 };
-};
-
-struct LocomotionComponent {
-	Vector2 vel = { 0 };
-	float targetSpeed = 0;
-	float multiplier = 1;
-
-	void setVelocity(Vector2 v)
-	{
-		vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
-		vel = Vector2Scale(vel, GetFrameTime());
-	}
-};
-
-struct PlayerSteeringComponent {
-	int dummy = 0;
-};
-
-struct TestSteeringComponent {
-	int speed = WALK_SPEED;
-};
-
-struct ColliderComponent {
-	Vector2 size = { 0 };
-};
-
-struct RenderableTag {
-	int z = 0;
-
-	/* TODO: deprecate as soon as EnTT 
-	 * implements enabled/disabled components */
-	bool render = true;
-};
-
-void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity>> &renderables)
+void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity*>> &renderables)
 {
 	auto view = GetCameraView(cam);
 	
@@ -392,7 +412,7 @@ void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity>> &rend
 	});
 
 	for (auto &renderable : items) {
-		Entity& entity = renderable.item;
+		Entity& entity = *renderable.item;
 		auto &transform = entity.get<TransformComponent>();
 
 		if (entity.has<ColoredRectComponent>()) {
@@ -420,12 +440,10 @@ static inline void followCameraTargets(Scene &scene)
 {
 	scene.each<CameraComponent>([](auto &comp) {
 		auto &cam = comp.cam;
-		auto &entity = *comp.target;
+		auto &entity = *comp.target; /* FIXME: will crash if no target */
 		
-		if (entity != nullptr) {
-			if (entity.has<TransformComponent>()) {
-				cam.target = Vector2Add(entity.get<TransformComponent>(), comp.offset);
-			}
+		if (entity.template has<TransformComponent>()) {
+			cam.target = Vector2Add(entity.template get<TransformComponent>(), comp.offset);
 		}
 	});
 }
@@ -433,7 +451,7 @@ static inline void followCameraTargets(Scene &scene)
 static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene, Rectangle collider)
 {
 	const Vector2 transform = { collider.x + collider.width / 2, collider.y + collider.height / 2 };
-	const std::array<Vector2, 8> offsets = {
+	const std::array<Vector2, 8> offsets = {{
 		{ -collider.width, -collider.height },
 		{ -collider.width, 0 },
 		{ -collider.width, collider.height },
@@ -442,11 +460,11 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 		{ collider.width, -collider.height },
 		{ collider.width, 0 },
 		{ collider.width, collider.height }
-	};
+	}};
 	std::array<Rectangle, 8> found;
 	size_t count = 0;
 
-	scene.each<CameraComponent>([&offsets](auto &tilePos, auto &collider) {
+	scene.each<TransformComponent, ColliderComponent>([&offsets, &transform, &found, &count](auto &tilePos, auto &collider) {
 		for (const auto &offset : offsets) {
 			const Rectangle collision = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
 
@@ -458,11 +476,13 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 			}
 		}
 	});
+
+	return found;
 }
 
 bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
 {
-	const auto found = neighbouringColliders(scene);
+	const auto found = neighbouringColliders(scene, collider);
 
 	for (const auto &collision : found) {
 		result = GetCollisionRec(collider, collision);
@@ -479,33 +499,30 @@ static inline Rectangle tcToRect(TransformComponent transform, ColliderComponent
 
 void handleLocomotion(Scene &scene)
 {
-	scene.each<TransformComponent, LocomotionComponent, ColliderComponent>([](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
+	scene.each<TransformComponent, LocomotionComponent, ColliderComponent>([&scene](auto entity, const auto &transform, const auto &locomotion, const auto &collider) {
 		Rectangle collision;
 
-		/* We apply velocity to coordinates separately 
-		 * as otherwise we would encounter strange 
-		 * behaviour with collisions. */
-		if (Vector2LengthSqr(locomotion.vel) != 0) {
-			entity.update<TransformComponent>([&locomotion](auto &transform) {
+		/*if (Vector2LengthSqr(locomotion.vel) != 0) {
+			entity.template update<TransformComponent>([&locomotion](auto &transform) {
 				transform.pos.x += locomotion.vel.x * locomotion.multiplier;
 			});
 
 			if (isColliding(scene, tcToRect(transform, collider), &collision)) {
-				entity.update<TransformComponent>([&collision, &locomotion](auto &transform) {
+				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
 					transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
 				});
 			}
 
-			entity.update<TransformComponent>([&locomotion](auto &transform) {
+			entity.template update<TransformComponent>([&locomotion](auto &transform) {
 				transform.pos.y += locomotion.vel.y * locomotion.multiplier;
 			});
 
 			if (isColliding(scene, tcToRect(transform, collider), &collision)) {
-				entity.update<TransformComponent>([&collision, &locomotion](auto &transform) {
+				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
 					transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
 				});
 			}
-		}
+		}*/
 	});
 }
 
