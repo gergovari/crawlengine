@@ -402,20 +402,9 @@ class Scene {
 
 		template <typename... ComponentTypes, typename Func>
 		void each(Func&& func) {
-			if constexpr (std::is_invocable_v<Func, Entity, const ComponentTypes&...>) {
-				registry.template view<ComponentTypes...>().template each([func = std::forward<Func>(func)](auto e, auto&... components) {
-						auto *entityP = get(e);
-						if (entityP) {
-							auto &entity = *entityP;
-
-							func(entity, components...);
-						}
-				});
-			} else {
-				registry.template view<ComponentTypes...>().template each([func = std::forward<Func>(func)](auto, auto&... components) {
-						func(components...);
-				});
-			}
+			registry.template view<ComponentTypes...>().template each([func = std::forward<Func>(func)](auto, auto&... components) {
+					func(components...);
+			});
 		}
 
 
@@ -465,10 +454,14 @@ static inline void followCameraTargets(Scene &scene)
 {
 	scene.each<CameraComponent>([](auto &comp) {
 		auto &cam = comp.cam;
-		auto &entity = *comp.target; /* FIXME: will crash if no target */
-		
-		if (entity.template has<TransformComponent>()) {
-			cam.target = Vector2Add(entity.template get<TransformComponent>(), comp.offset);
+		auto *entityP = comp.target;
+
+		if (entityP) {
+			auto &entity = *entityP;
+			
+			if (entity.template has<TransformComponent>()) {
+				cam.target = Vector2Add(entity.template get<TransformComponent>(), comp.offset);
+			}
 		}
 	});
 }
