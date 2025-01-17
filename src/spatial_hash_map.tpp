@@ -2,9 +2,7 @@
 
 #include "raylib.h"
 
-template <typename T> SpatialHashMap<T>::SpatialHashMap(SpatialPair u) : unit(u)
-{
-}
+#include "spatial_hash_map.hpp"
 
 template <typename T> void SpatialHashMap<T>::forEach(std::function<bool(SpatialCell<T> &)> func, Rectangle rect)
 {

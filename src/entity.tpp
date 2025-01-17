@@ -1,5 +1,7 @@
 #pragma once
 
+#include "entity.hpp"
+
 template <typename Type, typename... Args> decltype(auto) Entity::add(Args &&...args)
 {
     return registry->emplace<Type>(entity, std::forward<Args>(args)...);

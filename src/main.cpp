@@ -381,6 +381,7 @@ class System
 {
   public:
     virtual void tick(Scene &scene) = 0;
+    virtual ~System() = default;
 };
 
 class RenderToCameras : public System
@@ -554,7 +555,6 @@ void addWorld(Scene &scene)
     {
         for (int y = 0; y < WORLD_HEIGHT; y++)
         {
-            int i = y + x * WORLD_HEIGHT;
             auto &entity = scene.add();
 
             if (x == 0 || x == WORLD_WIDTH - 1 || y == 0 || y == WORLD_HEIGHT - 1 || (x == 5 && (y > 3 && y < 9)) ||
