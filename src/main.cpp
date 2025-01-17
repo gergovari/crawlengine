@@ -9,6 +9,9 @@
 #include <forward_list>
 #include <unordered_set>
 
+#include "entity.hpp"
+#include "components.hpp"
+
 #define WINDOW_TITLE "CrawlSTART"
 
 #define SCREEN_WIDTH (1280)
@@ -23,121 +26,6 @@
 #define PLAYER_SPAWN_Y 1
 #define WALK_SPEED 120.0f
 #define SPRINT_SPEED WALK_SPEED * 2
-
-class Entity {
-	private:
-		entt::registry *registry;
-		entt::entity entity;
-
-	public:
-		Entity(entt::registry *r) : registry(r) {
-			entity = registry->create();
-		}
-
-		~Entity() {
-			registry->destroy(entity);
-		}
-		
-		operator entt::entity() const
-		{
-			return entity;
-		}
-
-		bool operator==(const Entity &other) const
-		{
-			return (registry == other.registry) && (entity == other.entity);
-		}
-
-		template<typename Type, typename... Args>
-			decltype(auto) add(Args &&...args)
-			{
-				return registry->emplace<Type>(entity, std::forward<Args>(args)...);
-			}
-
-		template<typename Type, typename... Args>
-			decltype(auto) update(Args &&...args)
-			{
-				return registry->patch<Type>(entity, std::forward<Args>(args)...);
-			}
-
-		template<typename Type>
-			decltype(auto) get() const
-			{
-				return registry->get<Type>(entity);
-			}
-
-		template<typename... Args>
-			decltype(auto) has() const
-			{
-				return registry->all_of<Args...>(entity);
-			}
-
-		template<typename... Args>
-			decltype(auto) remove()
-			{
-				return registry->remove<Args...>(entity);
-			}
-};
-
-namespace Component {
-	struct Camera {
-		Camera2D cam = { 0 };
-
-		Entity* target = nullptr;
-		Vector2 offset = { 0 };
-	};
-
-	struct Transform {
-		Vector2 pos = { 0 };
-
-		operator Vector2() const { return pos; }
-	};
-
-	struct ColoredRect {
-		Color color = DARKPURPLE;
-		Vector2 size = { 0 };
-	};
-
-	struct Locomotion {
-		Vector2 vel = { 0 };
-		float targetSpeed = 0;
-		std::vector<std::function<Vector2(Vector2)>> modifiers;
-
-		void setVelocity(Vector2 v)
-		{
-			vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
-
-			for (auto &modifier : modifiers) {
-				vel = modifier(vel);
-			}
-
-			vel = Vector2Scale(vel, GetFrameTime());
-		}
-	};
-	
-	struct Collider {
-		Vector2 size = { 0 };
-	};
-
-	struct Area {
-		Vector2 size = { 0 };
-		entt::dispatcher dispatcher{};
-	};
-
-	struct MovementSlowDown {
-		float multiplier = .5;
-	};
-	
-	namespace Steering {
-		struct Player {
-			int dummy = 0;
-		};
-
-		struct Test {
-			int speed = WALK_SPEED;
-		};
-	}
-}
 
 namespace Tag {
 	struct Renderable {
@@ -779,9 +667,12 @@ void addEnemy(Scene &scene) {
 	auto &entity = scene.add();
 
 	entity.add<Component::Transform>(Vector2{ 3 * TILE_SIZE, 4 * TILE_SIZE });
-	entity.add<Component::Locomotion>();
-	entity.add<Component::Steering::Test>();
 	entity.add<Component::Collider>(Vector2{ PLAYER_SIZE, PLAYER_SIZE });
+
+	entity.add<Component::Locomotion>();
+
+	entity.add<Component::Steering::Test>();
+	entity.get<Component::Steering::Test>().speed = WALK_SPEED;
 
 	entity.add<Component::ColoredRect>(RED, Vector2{ PLAYER_SIZE, PLAYER_SIZE });
 	entity.add<Tag::Renderable>();
