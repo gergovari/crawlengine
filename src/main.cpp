@@ -1,6 +1,7 @@
 #include <cstdio>
 
 #include <entt/entity/registry.hpp>
+#include <entt/signal/dispatcher.hpp>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -100,17 +101,31 @@ namespace Component {
 	struct Locomotion {
 		Vector2 vel = { 0 };
 		float targetSpeed = 0;
-		float multiplier = 1;
+		std::vector<std::function<Vector2(Vector2)>> modifiers;
 
 		void setVelocity(Vector2 v)
 		{
 			vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
+
+			for (auto &modifier : modifiers) {
+				vel = modifier(vel);
+			}
+
 			vel = Vector2Scale(vel, GetFrameTime());
 		}
 	};
-
+	
 	struct Collider {
 		Vector2 size = { 0 };
+	};
+
+	struct Area {
+		Vector2 size = { 0 };
+		entt::dispatcher dispatcher{};
+	};
+
+	struct MovementSlowDown {
+		float multiplier = .5;
 	};
 	
 	namespace Steering {
@@ -549,9 +564,20 @@ static bool IsColliding(Scene &scene, Rectangle collider, Rectangle &result)
 	return false;
 }
 
-static inline Rectangle tcToRect(Component::Transform transform, Component::Collider collider)
+static const inline Rectangle tcToRect(const Component::Transform &transform, const Component::Collider &collider)
 {
 	return { transform.pos.x, transform.pos.y, collider.size.x, collider.size.y };
+}
+
+static const inline Rectangle taToRect(const Component::Transform &transform, const Component::Area &area)
+{
+	return { transform.pos.x, transform.pos.y, area.size.x, area.size.y };
+}
+
+namespace Event {
+	struct Enter {
+		Entity* entity;
+	};
 }
 
 namespace System
@@ -670,6 +696,33 @@ namespace System
 				}
 		};
 	}
+
+	class Area : public System {
+		void tick(Scene &scene) override
+		{
+			scene.each<Component::Area, Component::Transform>([&scene](auto &area, const auto &transform) {
+				const Rectangle search = { transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3, area.size.y * 3 };
+				auto entities = scene.colliders.nearby(search);
+
+				for (auto &entityP : entities) {
+					if (entityP) {
+						auto &entity = *entityP;
+
+						if (entity.has<Component::Transform, Component::Collider>()) {
+							auto &eTransform = entity.get<Component::Transform>();
+							auto &eCollider = entity.get<Component::Collider>();
+							const auto result = GetCollisionRec(taToRect(transform, area), tcToRect(eTransform, eCollider));
+							
+							/* FIXME: on the right side of the area there is a deadzone? */
+							if (result.width > 0 && result.height > 0) {
+								area.dispatcher.template trigger<Event::Enter>(Event::Enter{ entityP });
+							}
+						}
+					}
+				}
+			});
+		}
+	};
 }
 
 void addWorld(Scene &scene) {
@@ -687,6 +740,8 @@ void addWorld(Scene &scene) {
 				entity.add<Component::Transform>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
 				entity.add<Component::ColoredRect>(DARKBLUE, Vector2{ TILE_SIZE, TILE_SIZE });
 				entity.add<Tag::Renderable>(-10);
+
+				entity.add<Component::Area>(Vector2{ TILE_SIZE, TILE_SIZE });
 			} else {
 				entity.add<Component::Transform>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
 				entity.add<Component::ColoredRect>(DARKGRAY, Vector2{ TILE_SIZE, TILE_SIZE });
@@ -740,14 +795,18 @@ int main()
 	SetTargetFPS(60);
 	
 	Scene scene;
-	
+
 	std::vector<std::unique_ptr<System::System>> systems;
 	{
 		using namespace System;
 		
 		systems.push_back(std::make_unique<Steering::Player>());
 		systems.push_back(std::make_unique<Steering::Test>());
+
 		systems.push_back(std::make_unique<Locomotion>());
+
+		systems.push_back(std::make_unique<Area>());
+
 		systems.push_back(std::make_unique<FollowCameraTargets>());
 		systems.push_back(std::make_unique<RenderToCameras>());
 	}
