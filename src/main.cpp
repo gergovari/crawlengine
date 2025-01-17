@@ -78,55 +78,61 @@ class Entity {
 			}
 };
 
-struct CameraComponent {
-	Camera2D cam = { 0 };
+namespace Component {
+	struct Camera {
+		Camera2D cam = { 0 };
 
-	Entity* target = nullptr;
-	Vector2 offset = { 0 };
-};
+		Entity* target = nullptr;
+		Vector2 offset = { 0 };
+	};
 
-struct TransformComponent {
-	Vector2 pos = { 0 };
+	struct Transform {
+		Vector2 pos = { 0 };
 
-	operator Vector2() const { return pos; }
-};
+		operator Vector2() const { return pos; }
+	};
 
-struct ColoredRectComponent {
-	Color color = DARKPURPLE;
-	Vector2 size = { 0 };
-};
+	struct ColoredRect {
+		Color color = DARKPURPLE;
+		Vector2 size = { 0 };
+	};
 
-struct LocomotionComponent {
-	Vector2 vel = { 0 };
-	float targetSpeed = 0;
-	float multiplier = 1;
+	struct Locomotion {
+		Vector2 vel = { 0 };
+		float targetSpeed = 0;
+		float multiplier = 1;
 
-	void setVelocity(Vector2 v)
-	{
-		vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
-		vel = Vector2Scale(vel, GetFrameTime());
+		void setVelocity(Vector2 v)
+		{
+			vel = Vector2Clamp(v, { -targetSpeed, -targetSpeed }, { targetSpeed, targetSpeed });
+			vel = Vector2Scale(vel, GetFrameTime());
+		}
+	};
+
+	struct Collider {
+		Vector2 size = { 0 };
+	};
+	
+	namespace Steering {
+		struct Player {
+			int dummy = 0;
+		};
+
+		struct Test {
+			int speed = WALK_SPEED;
+		};
 	}
-};
+}
 
-struct PlayerSteeringComponent {
-	int dummy = 0;
-};
+namespace Tag {
+	struct Renderable {
+		int z = 0;
 
-struct TestSteeringComponent {
-	int speed = WALK_SPEED;
-};
-
-struct ColliderComponent {
-	Vector2 size = { 0 };
-};
-
-struct RenderableTag {
-	int z = 0;
-
-	/* TODO: deprecate as soon as EnTT 
-	 * implements enabled/disabled components */
-	bool render = true;
-};
+		/* TODO: deprecate as soon as EnTT 
+		 * implements enabled/disabled components */
+		bool render = true;
+	};
+}
 
 typedef std::pair<int, int> SpatialPair;
 
@@ -270,7 +276,7 @@ class Scene {
 
 		static const RenderableItem<Entity*> inline eToRI(Entity &entity)
 		{
-			return { &entity, entity.get<RenderableTag>().z };
+			return { &entity, entity.get<Tag::Renderable>().z };
 		}
 
 		static const RenderableItem<Entity*> inline eToRI(Entity &entity, int z)
@@ -294,11 +300,11 @@ class Scene {
 			if (entityP) {
 				auto &entity = *entityP;
 
-				if (entity.has<TransformComponent>()) {
-					auto &transform = entity.get<TransformComponent>();
+				if (entity.has<Component::Transform>()) {
+					auto &transform = entity.get<Component::Transform>();
 
-					if (entity.has<ColoredRectComponent>()) {
-						auto &coloredRect = entity.get<ColoredRectComponent>();
+					if (entity.has<Component::ColoredRect>()) {
+						auto &coloredRect = entity.get<Component::ColoredRect>();
 
 						renderables.insert(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
 					}
@@ -312,11 +318,11 @@ class Scene {
 			if (entityP) {
 				auto &entity = *entityP;
 			
-				if (entity.has<RenderableTag>()) {
-					auto &transform = entity.get<TransformComponent>();
+				if (entity.has<Tag::Renderable>()) {
+					auto &transform = entity.get<Component::Transform>();
 
-					if (entity.has<ColoredRectComponent>()) {
-						auto &coloredRect = entity.get<ColoredRectComponent>();
+					if (entity.has<Component::ColoredRect>()) {
+						auto &coloredRect = entity.get<Component::ColoredRect>();
 
 						renderables.update(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
 					}
@@ -330,11 +336,11 @@ class Scene {
 			if (entityP) {
 				auto &entity = *entityP;
 
-				if (entity.has<TransformComponent>()) {
-					auto &transform = entity.get<TransformComponent>();
+				if (entity.has<Component::Transform>()) {
+					auto &transform = entity.get<Component::Transform>();
 
-					if (entity.has<ColoredRectComponent>()) {
-						auto &coloredRect = entity.get<ColoredRectComponent>();
+					if (entity.has<Component::ColoredRect>()) {
+						auto &coloredRect = entity.get<Component::ColoredRect>();
 						const auto renderable = eToRI(entity);
 						
 						/* If you observe RenderableItem, 
@@ -352,10 +358,10 @@ class Scene {
 
 		Scene() : renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)) {
 			/* TODO: reactive storage https://github.com/skypjack/entt/wiki/Entity-Component-System#storage */
-			registry.on_construct<RenderableTag>().connect<&Scene::onConstructRenderable>(this);
-			registry.on_destroy<RenderableTag>().connect<&Scene::onDestroyRenderable>(this);
-			registry.on_update<RenderableTag>().connect<&Scene::onUpdateRenderable>(this);
-			registry.on_update<TransformComponent>().connect<&Scene::onUpdateTransform>(this);
+			registry.on_construct<Tag::Renderable>().connect<&Scene::onConstructRenderable>(this);
+			registry.on_destroy<Tag::Renderable>().connect<&Scene::onDestroyRenderable>(this);
+			registry.on_update<Tag::Renderable>().connect<&Scene::onUpdateRenderable>(this);
+			registry.on_update<Component::Transform>().connect<&Scene::onUpdateTransform>(this);
 		}
 		
 		Entity& add()
@@ -410,7 +416,7 @@ class Scene {
 
 };
 
-void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity*>> &renderables)
+static void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity*>> &renderables)
 {
 	auto view = GetCameraView(cam);
 	
@@ -427,43 +433,14 @@ void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity*>> &ren
 
 	for (auto &renderable : items) {
 		Entity& entity = *renderable.item;
-		auto &transform = entity.get<TransformComponent>();
+		auto &transform = entity.get<Component::Transform>();
 
-		if (entity.has<ColoredRectComponent>()) {
-			auto &rect = entity.get<ColoredRectComponent>();
+		if (entity.has<Component::ColoredRect>()) {
+			auto &rect = entity.get<Component::ColoredRect>();
 
 			DrawRectangleV(transform.pos, rect.size, rect.color);
 		}
 	}
-}
-
-static inline void renderToCameras(Scene &scene)
-{
-	auto &renderables = scene.renderables;
-
-	scene.each<CameraComponent>([&renderables](auto &comp) {
-		auto &cam = comp.cam;
-
-		BeginMode2D(cam);
-		drawRenderables(cam, renderables);
-		EndMode2D();
-	});
-}
-
-static inline void followCameraTargets(Scene &scene)
-{
-	scene.each<CameraComponent>([](auto &comp) {
-		auto &cam = comp.cam;
-		auto *entityP = comp.target;
-
-		if (entityP) {
-			auto &entity = *entityP;
-			
-			if (entity.template has<TransformComponent>()) {
-				cam.target = Vector2Add(entity.template get<TransformComponent>(), comp.offset);
-			}
-		}
-	});
 }
 
 static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene, Rectangle collider)
@@ -482,7 +459,7 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 	std::array<Rectangle, 8> found;
 	size_t count = 0;
 
-	scene.each<TransformComponent, ColliderComponent>([&offsets, &transform, &found, &count](auto &tilePos, auto &collider) {
+	scene.each<Component::Transform, Component::Collider>([&offsets, &transform, &found, &count](auto &tilePos, auto &collider) {
 		for (const auto &offset : offsets) {
 			const Rectangle other = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
 			
@@ -498,7 +475,7 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 	return found;
 }
 
-bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
+static bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
 {
 	const auto found = neighbouringColliders(scene, collider);
 
@@ -511,76 +488,127 @@ bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
 	return false;
 }
 
-static inline Rectangle tcToRect(TransformComponent transform, ColliderComponent collider)
+static inline Rectangle tcToRect(Component::Transform transform, Component::Collider collider)
 {
 	return { transform.pos.x, transform.pos.y, collider.size.x, collider.size.y };
 }
 
-void handleLocomotion(Scene &scene)
+namespace System
 {
-	scene.eachE<TransformComponent, LocomotionComponent, ColliderComponent>([&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
-		Rectangle collision;
+	class System {
+		public:
+			virtual void tick(Scene &scene) = 0;
+	};
+	
+	class RenderToCameras : public System {
+		void tick(Scene &scene) override
+		{
+			auto &renderables = scene.renderables;
 
-		if (Vector2LengthSqr(locomotion.vel) != 0) {
-			entity.template update<TransformComponent>([&locomotion](auto &transform) {
-				transform.pos.x += locomotion.vel.x * locomotion.multiplier;
+			scene.each<Component::Camera>([&renderables](auto &comp) {
+				auto &cam = comp.cam;
+
+				BeginMode2D(cam);
+				drawRenderables(cam, renderables);
+				EndMode2D();
 			});
+		}
+	};
 
-			if (isColliding(scene, tcToRect(transform, collider), collision)) {
-				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
-					transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
+	class FollowCameraTargets : public System {
+		void tick(Scene &scene) override
+		{
+			scene.each<Component::Camera>([](auto &comp) {
+				auto &cam = comp.cam;
+				auto *entityP = comp.target;
+
+				if (entityP) {
+					auto &entity = *entityP;
+					
+					if (entity.template has<Component::Transform>()) {
+						cam.target = Vector2Add(entity.template get<Component::Transform>(), comp.offset);
+					}
+				}
+			});
+		}
+	};
+
+	class Locomotion : public System {
+		void tick(Scene &scene) override
+		{
+			scene.eachE<Component::Transform, Component::Locomotion, Component::Collider>([&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
+				Rectangle collision;
+
+				if (Vector2LengthSqr(locomotion.vel) != 0) {
+					entity.template update<Component::Transform>([&locomotion](auto &transform) {
+						transform.pos.x += locomotion.vel.x * locomotion.multiplier;
+					});
+
+					if (isColliding(scene, tcToRect(transform, collider), collision)) {
+						entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+							transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
+						});
+					}
+
+					entity.template update<Component::Transform>([&locomotion](auto &transform) {
+						transform.pos.y += locomotion.vel.y * locomotion.multiplier;
+					});
+
+					if (isColliding(scene, tcToRect(transform, collider), collision)) {
+						entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+							transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
+						});
+					}
+				}
+			});
+		}
+	};
+
+	namespace Steering
+	{
+		class Test : public System {
+			void tick(Scene &scene) override
+			{
+				scene.each<Component::Steering::Test, Component::Locomotion>([](const auto &test, auto &locomotion) {
+					locomotion.targetSpeed = test.speed;
+					Vector2 in;
+
+					if ((int)GetTime() % 2 == 0) {
+						in = { 1, 0 };
+					} else if ((int)GetTime() % 3 == 0) {
+						in = { 0, 1 };
+					} else if ((int)GetTime() % 8 == 0) {
+						in = { -1, 0 };
+					} else {
+						in = { 0, -1 };
+					}
+					
+					locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
 				});
 			}
+		};
 
-			entity.template update<TransformComponent>([&locomotion](auto &transform) {
-				transform.pos.y += locomotion.vel.y * locomotion.multiplier;
-			});
+		class Player : public System {
+			public:
+				void tick(Scene &scene) override
+				{
+					scene.each<Component::Steering::Player, Component::Locomotion>([](const auto &input, auto &locomotion) {
+						/* input will be used when`
+						 * I get into multiple input devices, 
+						 * custom keybinds and many more advanced ideas... */
 
-			if (isColliding(scene, tcToRect(transform, collider), collision)) {
-				entity.template update<TransformComponent>([&collision, &locomotion](auto &transform) {
-					transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
-				});
-			}
-		}
-	});
-}
-
-void handlePlayerSteering(Scene &scene)
-{
-	scene.each<PlayerSteeringComponent, LocomotionComponent>([](const auto &input, auto &locomotion) {
-		/* input will be used when`
-		 * I get into multiple input devices, 
-		 * custom keybinds and many more advanced ideas... */
-
-		if (IsKeyDown(KEY_LEFT_SHIFT)) {
-			locomotion.targetSpeed = SPRINT_SPEED;
-		} else {
-			locomotion.targetSpeed = WALK_SPEED;
-		}
-		Vector2 in = { (float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)), (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP)) };
-		
-		locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-	});
-}
-
-void handleTestSteering(Scene &scene)
-{
-	scene.each<TestSteeringComponent, LocomotionComponent>([](const auto &test, auto &locomotion) {
-		locomotion.targetSpeed = test.speed;
-		Vector2 in;
-
-		if ((int)GetTime() % 2 == 0) {
-			in = { 1, 0 };
-		} else if ((int)GetTime() % 3 == 0) {
-			in = { 0, 1 };
-		} else if ((int)GetTime() % 8 == 0) {
-			in = { -1, 0 };
-		} else {
-			in = { 0, -1 };
-		}
-		
-		locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-	});
+						if (IsKeyDown(KEY_LEFT_SHIFT)) {
+							locomotion.targetSpeed = SPRINT_SPEED;
+						} else {
+							locomotion.targetSpeed = WALK_SPEED;
+						}
+						Vector2 in = { (float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)), (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP)) };
+						
+						locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
+					});
+				}
+		};
+	}
 }
 
 void addWorld(Scene &scene) {
@@ -590,18 +618,18 @@ void addWorld(Scene &scene) {
 			auto &entity = scene.add();
 
 			if (x == 0 || x == WORLD_WIDTH - 1 || y == 0 || y == WORLD_HEIGHT - 1 || (x == 5 && (y > 3 && y < 9)) || (x == 8 && (y > 3 && y < 9))) {
-				entity.add<TransformComponent>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
-				entity.add<ColliderComponent>(Vector2{ TILE_SIZE, TILE_SIZE });
-				entity.add<ColoredRectComponent>(GRAY, Vector2{ TILE_SIZE, TILE_SIZE });
-				entity.add<RenderableTag>();
+				entity.add<Component::Transform>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
+				entity.add<Component::Collider>(Vector2{ TILE_SIZE, TILE_SIZE });
+				entity.add<Component::ColoredRect>(GRAY, Vector2{ TILE_SIZE, TILE_SIZE });
+				entity.add<Tag::Renderable>();
 			} else if (x == 10) {
-				entity.add<TransformComponent>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
-				entity.add<ColoredRectComponent>(DARKBLUE, Vector2{ TILE_SIZE, TILE_SIZE });
-				entity.add<RenderableTag>(-10);
+				entity.add<Component::Transform>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
+				entity.add<Component::ColoredRect>(DARKBLUE, Vector2{ TILE_SIZE, TILE_SIZE });
+				entity.add<Tag::Renderable>(-10);
 			} else {
-				entity.add<TransformComponent>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
-				entity.add<ColoredRectComponent>(DARKGRAY, Vector2{ TILE_SIZE, TILE_SIZE });
-				entity.add<RenderableTag>(-10);
+				entity.add<Component::Transform>(Vector2{ x * TILE_SIZE, y * TILE_SIZE });
+				entity.add<Component::ColoredRect>(DARKGRAY, Vector2{ TILE_SIZE, TILE_SIZE });
+				entity.add<Tag::Renderable>(-10);
 			}
 		}
 	}
@@ -610,16 +638,16 @@ void addWorld(Scene &scene) {
 void addPlayer(Scene &scene) {
 	auto &entity = scene.add();
 
-	entity.add<TransformComponent>(Vector2{ PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE });
-	entity.add<LocomotionComponent>();
-	entity.add<ColliderComponent>(Vector2{ PLAYER_SIZE, PLAYER_SIZE });
-	entity.add<PlayerSteeringComponent>();
+	entity.add<Component::Transform>(Vector2{ PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE });
+	entity.add<Component::Locomotion>();
+	entity.add<Component::Collider>(Vector2{ PLAYER_SIZE, PLAYER_SIZE });
+	entity.add<Component::Steering::Player>();
 
-	entity.add<ColoredRectComponent>(GREEN, Vector2{ PLAYER_SIZE, PLAYER_SIZE });
-	entity.add<RenderableTag>();
+	entity.add<Component::ColoredRect>(GREEN, Vector2{ PLAYER_SIZE, PLAYER_SIZE });
+	entity.add<Tag::Renderable>();
 
-	entity.add<CameraComponent>();
-	CameraComponent &comp = entity.get<CameraComponent>();
+	entity.add<Component::Camera>();
+	Component::Camera &comp = entity.get<Component::Camera>();
 	Camera2D *cam = &comp.cam;
 	
 	comp.target = &entity;
@@ -634,38 +662,49 @@ void addPlayer(Scene &scene) {
 void addEnemy(Scene &scene) {
 	auto &entity = scene.add();
 
-	entity.add<TransformComponent>(Vector2{ 3 * TILE_SIZE, 4 * TILE_SIZE });
-	entity.add<LocomotionComponent>();
-	entity.add<TestSteeringComponent>();
-	entity.add<ColliderComponent>(Vector2{ PLAYER_SIZE, PLAYER_SIZE });
+	entity.add<Component::Transform>(Vector2{ 3 * TILE_SIZE, 4 * TILE_SIZE });
+	entity.add<Component::Locomotion>();
+	entity.add<Component::Steering::Test>();
+	entity.add<Component::Collider>(Vector2{ PLAYER_SIZE, PLAYER_SIZE });
 
-	entity.add<ColoredRectComponent>(RED, Vector2{ PLAYER_SIZE, PLAYER_SIZE });
-	entity.add<RenderableTag>();
+	entity.add<Component::ColoredRect>(RED, Vector2{ PLAYER_SIZE, PLAYER_SIZE });
+	entity.add<Tag::Renderable>();
 }
+
 
 int main()
 {
+
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
 	SetTargetFPS(60);
 	
 	Scene scene;
 	
+	std::vector<std::unique_ptr<System::System>> systems;
+	{
+		using namespace System;
+		
+		systems.push_back(std::make_unique<Steering::Player>());
+		systems.push_back(std::make_unique<Steering::Test>());
+		systems.push_back(std::make_unique<Locomotion>());
+		systems.push_back(std::make_unique<FollowCameraTargets>());
+		systems.push_back(std::make_unique<RenderToCameras>());
+	}
+
 	addWorld(scene);
 	addPlayer(scene);
 	addEnemy(scene);
 
 	while (!WindowShouldClose())
 	{
-		handlePlayerSteering(scene);
-		handleTestSteering(scene);
-		handleLocomotion(scene);
-
-		followCameraTargets(scene);
 
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
+		
+		for (auto &system : systems) {
+			system->tick(scene);
+		}
 
-		renderToCameras(scene);
 		DrawFPS(0, 0);
 		
 		EndDrawing();
