@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <unordered_set>
 
 #include <entt/entity/registry.hpp>
 #include <entt/signal/dispatcher.hpp>
@@ -6,13 +7,11 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include <forward_list>
-#include <unordered_set>
-
 #include "entity.hpp"
 #include "components.hpp"
+#include "spatial_hash_map.hpp"
 
-#define WINDOW_TITLE "CrawlSTART"
+#define WINDOW_TITLE "CRAWLengine"
 
 #define SCREEN_WIDTH (1280)
 #define SCREEN_HEIGHT (720)
@@ -26,126 +25,6 @@
 #define PLAYER_SPAWN_Y 1
 #define WALK_SPEED 120.0f
 #define SPRINT_SPEED WALK_SPEED * 2
-
-namespace Tag {
-	struct Renderable {
-		int z = 0;
-
-		/* TODO: deprecate as soon as EnTT 
-		 * implements enabled/disabled components */
-		bool render = true;
-	};
-}
-
-typedef std::pair<int, int> SpatialPair;
-
-template <typename T>
-using SpatialCell = typename std::forward_list<T>;
-
-struct SpatialPairHash
-{
-	std::size_t operator() (const SpatialPair &pair) const {
-		size_t lhs = pair.first;
-		const size_t rhs = pair.second;
-
-		lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
-		return lhs;
-	}
-};
-
-template <typename T>
-class SpatialHashMap {
-	private:
-		/* TODO: think about load factor and resizing */
-		std::unordered_map<SpatialPair, SpatialCell<T>, SpatialPairHash> cells;
-		const SpatialPair unit;
-		
-		void forEach(std::function<bool(SpatialCell<T>&)> func, Rectangle rect)
-		{
-			auto steps = std::make_pair((int)std::floor(rect.width / unit.first), (int)std::floor(rect.height / unit.second));
-			auto base = std::make_pair((int)std::floor(rect.x / unit.first), (int)std::floor(rect.y / unit.second));
-
-			for (int i = 0; i < steps.first; i++) {
-				for (int j = 0; j < steps.second; j++) {
-					const auto pos = std::make_pair(base.first + i, base.second + j);
-
-					if (func(cells[pos])) {
-						return;
-					}
-				}
-			}
-
-		}
-
-		void forEach(std::function<bool(SpatialCell<T>&)> func)
-		{
-			for (auto &[pos, cell] : cells) {
-				if (func(cell)) {
-					return;
-				}
-			}
-		}
-	public:
-		SpatialHashMap(SpatialPair u) : unit(u) {}
-
-		void insert(T item, Rectangle rect)
-		{
-			forEach([&item, &rect](auto &cell) {
-				cell.emplace_front(item);
-				return false;
-			}, rect);
-		}
-		
-		void update(T item, Rectangle rect) 
-		{
-			remove(item);
-			insert(item, rect);
-		}
-
-		void replace(T item, T t) 
-		{
-			forEach([&item, &t](auto &cell) {
-				for (auto &current : cell) {
-					if (current == item) {
-						current = t;
-						return true;
-					}
-				}
-				return false;
-			});
-		}
-
-		void remove(T item)
-		{
-			forEach([&item](auto &cell) {
-				auto prev = cell.before_begin();
-
-				for (auto it = cell.begin(); it != cell.end(); ++it) {
-					if (*it == item) {
-						it = cell.erase_after(prev);
-						return true;
-					}
-
-					prev = it;
-				}
-				return false;
-			});
-		}
-
-		SpatialCell<T> nearby(Rectangle rect)
-		{
-			SpatialCell<T> result;
-
-			forEach([&result](auto &cell) {
-				for (auto &item : cell) {
-					result.push_front(item);
-				}
-				return false;
-			}, rect);
-
-			return result;
-		}
-};
 
 static const inline Rectangle GetCameraView(Camera2D &camera)
 {

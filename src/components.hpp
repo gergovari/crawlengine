@@ -42,7 +42,7 @@ namespace Component {
 	};
 
 	struct MovementSlowDown {
-		float multiplier = .5f;
+		float multiplier = 0.5f;
 	};
 
 	namespace Steering {
@@ -57,3 +57,12 @@ namespace Component {
 
 }
 
+namespace Tag {
+	struct Renderable {
+		int z = 0;
+
+		/* TODO: deprecate as soon as EnTT 
+		 * implements enabled/disabled components */
+		bool render = true;
+	};
+}
