@@ -294,6 +294,16 @@ class Scene {
 			}
 		}
 
+		void onDestroyCollider(entt::registry& registry, entt::entity e)
+		{
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
+
+				colliders.remove(&entity);
+			}
+		}
+
 		void onConstructRenderable(entt::registry& registry, entt::entity e)
 		{
 			auto *entityP = get(e);
@@ -312,6 +322,40 @@ class Scene {
 			}
 		}
 
+		void onConstructCollider(entt::registry& registry, entt::entity e)
+		{
+			auto *entityP = get(e);
+			if (entityP) {
+				auto &entity = *entityP;
+
+				if (entity.has<Component::Transform>()) {
+					auto &transform = entity.get<Component::Transform>();
+					auto &collider = entity.get<Component::Collider>();
+
+					colliders.insert(&entity, { transform.pos.x, transform.pos.y, collider.size.x, collider.size.y });
+				}
+			}
+		}
+		
+		void onUpdateTransformForRenderable(Entity &entity)
+		{
+			auto &transform = entity.get<Component::Transform>();
+
+			if (entity.has<Component::ColoredRect>()) {
+				auto &coloredRect = entity.get<Component::ColoredRect>();
+
+				renderables.update(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
+			}
+		}
+
+		void onUpdateTransformForCollider(Entity &entity)
+		{
+			auto &transform = entity.get<Component::Transform>();
+			auto &collider = entity.get<Component::Collider>();
+
+			colliders.update(&entity, { transform.pos.x, transform.pos.y, collider.size.x, collider.size.y });
+		}
+
 		void onUpdateTransform(entt::registry& registry, entt::entity e)
 		{
 			auto *entityP = get(e);
@@ -319,13 +363,11 @@ class Scene {
 				auto &entity = *entityP;
 			
 				if (entity.has<Tag::Renderable>()) {
-					auto &transform = entity.get<Component::Transform>();
+					onUpdateTransformForRenderable(entity);
+				}
 
-					if (entity.has<Component::ColoredRect>()) {
-						auto &coloredRect = entity.get<Component::ColoredRect>();
-
-						renderables.update(eToRI(entity), { transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y });
-					}
+				if (entity.has<Component::Collider>()) {
+					onUpdateTransformForCollider(entity);
 				}
 			}
 		}
@@ -355,12 +397,24 @@ class Scene {
 	public:
 		std::forward_list<Entity> entities;
 		SpatialHashMap<RenderableItem<Entity*>> renderables;
-
-		Scene() : renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)) {
-			/* TODO: reactive storage https://github.com/skypjack/entt/wiki/Entity-Component-System#storage */
+		SpatialHashMap<Entity*> colliders;
+		
+		void inline setupRenderables() {
 			registry.on_construct<Tag::Renderable>().connect<&Scene::onConstructRenderable>(this);
 			registry.on_destroy<Tag::Renderable>().connect<&Scene::onDestroyRenderable>(this);
 			registry.on_update<Tag::Renderable>().connect<&Scene::onUpdateRenderable>(this);
+		}
+
+		void inline setupColliders() {
+			registry.on_construct<Component::Collider>().connect<&Scene::onConstructCollider>(this);
+			registry.on_destroy<Component::Collider>().connect<&Scene::onDestroyCollider>(this);
+		}
+
+		Scene() : renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)), colliders(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)) {
+			/* TODO: reactive storage https://github.com/skypjack/entt/wiki/Entity-Component-System#storage */
+			setupRenderables();
+			setupColliders();
+
 			registry.on_update<Component::Transform>().connect<&Scene::onUpdateTransform>(this);
 		}
 		
@@ -443,7 +497,7 @@ static void drawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity*
 	}
 }
 
-static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene, Rectangle collider)
+static const inline std::array<Rectangle, 8> NeighbouringColliders(Scene &scene, Rectangle collider)
 {
 	const Vector2 transform = { collider.x + collider.width / 2, collider.y + collider.height / 2 };
 	const std::array<Vector2, 8> offsets = {{
@@ -458,26 +512,33 @@ static const inline std::array<Rectangle, 8> neighbouringColliders(Scene &scene,
 	}};
 	std::array<Rectangle, 8> found;
 	size_t count = 0;
+	
+	collider = { collider.x - collider.width, collider.y - collider.height, collider.width * 3, collider.height * 3 };
+	auto entities = scene.colliders.nearby(collider);
+	
+	for (auto &entity : entities) {
+		if (entity) {
+			auto &tilePos = entity->get<Component::Transform>();
+			auto &collider = entity->get<Component::Collider>();
 
-	scene.each<Component::Transform, Component::Collider>([&offsets, &transform, &found, &count](auto &tilePos, auto &collider) {
-		for (const auto &offset : offsets) {
-			const Rectangle other = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
-			
-			if (CheckCollisionPointRec(Vector2Add(transform, offset), other)) {
-				if (found.size() <= count) {
-					return;
+			for (const auto &offset : offsets) {
+				const Rectangle other = { tilePos.pos.x, tilePos.pos.y, collider.size.x, collider.size.y };
+				
+				if (CheckCollisionPointRec(Vector2Add(transform, offset), other)) {
+					if (found.size() <= count) {
+						return found;
+					}
+					found[count++] = other;
 				}
-				found[count++] = other;
 			}
 		}
-	});
-
+	}
 	return found;
 }
 
-static bool isColliding(Scene &scene, Rectangle collider, Rectangle &result)
+static bool IsColliding(Scene &scene, Rectangle collider, Rectangle &result)
 {
-	const auto found = neighbouringColliders(scene, collider);
+	const auto found = NeighbouringColliders(scene, collider);
 
 	for (const auto &collision : found) {
 		result = GetCollisionRec(collider, collision);
@@ -541,20 +602,20 @@ namespace System
 
 				if (Vector2LengthSqr(locomotion.vel) != 0) {
 					entity.template update<Component::Transform>([&locomotion](auto &transform) {
-						transform.pos.x += locomotion.vel.x * locomotion.multiplier;
+						transform.pos.x += locomotion.vel.x;
 					});
 
-					if (isColliding(scene, tcToRect(transform, collider), collision)) {
+					if (IsColliding(scene, tcToRect(transform, collider), collision)) {
 						entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
 							transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
 						});
 					}
 
 					entity.template update<Component::Transform>([&locomotion](auto &transform) {
-						transform.pos.y += locomotion.vel.y * locomotion.multiplier;
+						transform.pos.y += locomotion.vel.y;
 					});
 
-					if (isColliding(scene, tcToRect(transform, collider), collision)) {
+					if (IsColliding(scene, tcToRect(transform, collider), collision)) {
 						entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
 							transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
 						});
