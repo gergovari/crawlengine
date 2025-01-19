@@ -8,6 +8,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "spatial_hash_map.hpp"
+#include "renderables.hpp"
 
 #define WINDOW_TITLE "CRAWLengine"
 
@@ -36,17 +37,6 @@ static const inline Rectangle GetCameraView(Camera2D &camera)
 
     return view;
 }
-
-template <typename T> struct RenderableItem
-{
-    T item;
-    int z;
-
-    bool operator==(const RenderableItem<T> &other) const
-    {
-        return item == other.item;
-    }
-};
 
 #define SPATIAL_UNIT 50
 

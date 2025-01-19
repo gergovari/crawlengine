@@ -4,6 +4,9 @@
 
 #include "spatial_hash_map.hpp"
 
+template <typename T>
+SpatialHashMap<T>::SpatialHashMap(SpatialPair u) : unit(u) {}
+
 template <typename T> void SpatialHashMap<T>::forEach(std::function<bool(SpatialCell<T> &)> func, Rectangle rect)
 {
     auto steps = std::make_pair((int)std::floor(rect.width / unit.first), (int)std::floor(rect.height / unit.second));
