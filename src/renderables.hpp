@@ -1,7 +1,6 @@
 #pragma once
 
-template <typename T>
-struct RenderableItem
+template <typename T> struct RenderableItem
 {
     T item;
     int z;
