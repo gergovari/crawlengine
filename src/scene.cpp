@@ -53,19 +53,19 @@ void Scene::onConstructRenderable(entt::registry &registry, entt::entity e)
 
 void Scene::onConstructCollider(entt::registry &registry, entt::entity e)
 {
-    auto *entityP = get(e);
-    if (entityP)
-    {
-        auto &entity = *entityP;
-
-        if (entity.has<Component::Transform>())
+        auto *entityP = get(e);
+        if (entityP)
         {
-            auto &transform = entity.get<Component::Transform>();
-            auto &collider = entity.get<Component::Collider>();
+            auto &entity = *entityP;
 
-            colliders.insert(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
+            if (entity.template has<Component::Transform>())
+            {
+                auto &transform = entity.template get<Component::Transform>();
+                auto &collider = entity.template get<Component::Collider>();
+
+                colliders.insert(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
+            }
         }
-    }
 }
 
 void Scene::onUpdateTransformForRenderable(Entity &entity)
@@ -128,15 +128,15 @@ void Scene::onUpdateRenderable(entt::registry &registry, entt::entity e)
 
 void Scene::setupRenderables()
 {
-    registry.on_construct<Tag::Renderable>().connect<&Scene::onConstructRenderable>(this);
-    registry.on_destroy<Tag::Renderable>().connect<&Scene::onDestroyRenderable>(this);
-    registry.on_update<Tag::Renderable>().connect<&Scene::onUpdateRenderable>(this);
+    onConstruct<Tag::Renderable, &Scene::onConstructRenderable>();
+    onDestroy<Tag::Renderable, &Scene::onDestroyRenderable>();
+    onUpdate<Tag::Renderable, &Scene::onUpdateRenderable>();
 }
 
 void Scene::setupColliders()
 {
-    registry.on_construct<Component::Collider>().connect<&Scene::onConstructCollider>(this);
-    registry.on_destroy<Component::Collider>().connect<&Scene::onDestroyCollider>(this);
+    onConstruct<Component::Collider, &Scene::onConstructCollider>();
+    onDestroy<Component::Collider, &Scene::onDestroyCollider>();
 }
 
 #define SPATIAL_UNIT 50
@@ -146,7 +146,7 @@ Scene::Scene()
 {
     setupRenderables();
     setupColliders();
-    registry.on_update<Component::Transform>().connect<&Scene::onUpdateTransform>(this);
+    onUpdate<Component::Transform, &Scene::onUpdateTransform>();
 }
 
 Entity &Scene::add()

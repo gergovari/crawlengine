@@ -39,8 +39,15 @@ class Scene
     void remove(Entity &entity);
 
     template <typename... ComponentTypes, typename Func> void eachE(Func &&func);
-
     template <typename... ComponentTypes, typename Func> void each(Func &&func);
+
+    template <typename ComponentType, auto Func> void onConstruct();
+    template <typename ComponentType, auto Func> void onUpdate();
+    template <typename ComponentType, auto Func> void onDestroy();
+
+    template <typename ComponentType, auto Func, typename Class> void onConstruct(Class inst);
+    template <typename ComponentType, auto Func, typename Class> void onUpdate(Class inst);
+    template <typename ComponentType, auto Func, typename Class> void onDestroy(Class inst);
 };
 
 #include "scene.tpp"
