@@ -369,185 +369,186 @@ static const inline Rectangle taToRect(const Component::Transform &transform, co
 
 namespace Event
 {
-struct Enter
-{
-    Entity *entity;
-};
-} // namespace Event
+    struct Enter
+    {
+        Entity *entity;
+    };
+}
 
 namespace System
 {
-class System
-{
-  public:
-    virtual void tick(Scene &scene) = 0;
-    virtual ~System() = default;
-};
-
-class RenderToCameras : public System
-{
-    void tick(Scene &scene) override
+    class System
     {
-        auto &renderables = scene.renderables;
+      public:
+        virtual void tick(Scene &scene) = 0;
+        virtual ~System() = default;
+    };
 
-        scene.each<Component::Camera>([&renderables](auto &comp) {
-            auto &cam = comp.cam;
-
-            BeginMode2D(cam);
-            drawRenderables(cam, renderables);
-            EndMode2D();
-        });
-    }
-};
-
-class FollowCameraTargets : public System
-{
-    void tick(Scene &scene) override
+    class RenderToCameras : public System
     {
-        scene.each<Component::Camera>([](auto &comp) {
-            auto &cam = comp.cam;
-            auto *entityP = comp.target;
+        void tick(Scene &scene) override
+        {
+            auto &renderables = scene.renderables;
 
-            if (entityP)
-            {
-                auto &entity = *entityP;
+            scene.each<Component::Camera>([&renderables](auto &comp) {
+                auto &cam = comp.cam;
 
-                if (entity.template has<Component::Transform>())
-                {
-                    cam.target = Vector2Add(entity.template get<Component::Transform>(), comp.offset);
-                }
-            }
-        });
-    }
-};
-
-class Locomotion : public System
-{
-    void tick(Scene &scene) override
-    {
-        scene.eachE<Component::Transform, Component::Locomotion, Component::Collider>(
-            [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
-                Rectangle collision;
-
-                if (Vector2LengthSqr(locomotion.vel) != 0)
-                {
-                    entity.template update<Component::Transform>(
-                        [&locomotion](auto &transform) { transform.pos.x += locomotion.vel.x; });
-
-                    if (IsColliding(scene, tcToRect(transform, collider), collision))
-                    {
-                        entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
-                            transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
-                        });
-                    }
-
-                    entity.template update<Component::Transform>(
-                        [&locomotion](auto &transform) { transform.pos.y += locomotion.vel.y; });
-
-                    if (IsColliding(scene, tcToRect(transform, collider), collision))
-                    {
-                        entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
-                            transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
-                        });
-                    }
-                }
+                BeginMode2D(cam);
+                drawRenderables(cam, renderables);
+                EndMode2D();
             });
-    }
-};
+        }
+    };
 
-namespace Steering
-{
-class Test : public System
-{
-    void tick(Scene &scene) override
+    class FollowCameraTargets : public System
     {
-        scene.each<Component::Steering::Test, Component::Locomotion>([](const auto &test, auto &locomotion) {
-            locomotion.targetSpeed = test.speed;
-            Vector2 in;
+        void tick(Scene &scene) override
+        {
+            scene.each<Component::Camera>([](auto &comp) {
+                auto &cam = comp.cam;
+                auto *entityP = comp.target;
 
-            if ((int)GetTime() % 2 == 0)
-            {
-                in = {1, 0};
-            }
-            else if ((int)GetTime() % 3 == 0)
-            {
-                in = {0, 1};
-            }
-            else if ((int)GetTime() % 8 == 0)
-            {
-                in = {-1, 0};
-            }
-            else
-            {
-                in = {0, -1};
-            }
-
-            locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-        });
-    }
-};
-
-class Player : public System
-{
-  public:
-    void tick(Scene &scene) override
-    {
-        scene.each<Component::Steering::Player, Component::Locomotion>([](const auto &input, auto &locomotion) {
-            /* input will be used when`
-             * I get into multiple input devices,
-             * custom keybinds and many more advanced ideas... */
-
-            if (IsKeyDown(KEY_LEFT_SHIFT))
-            {
-                locomotion.targetSpeed = SPRINT_SPEED;
-            }
-            else
-            {
-                locomotion.targetSpeed = WALK_SPEED;
-            }
-            Vector2 in = {(float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)),
-                          (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP))};
-
-            locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-        });
-    }
-};
-} // namespace Steering
-
-class Area : public System
-{
-    void tick(Scene &scene) override
-    {
-        scene.each<Component::Area, Component::Transform>([&scene](auto &area, const auto &transform) {
-            const Rectangle search = {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3,
-                                      area.size.y * 3};
-            auto entities = scene.colliders.nearby(search);
-
-            for (auto &entityP : entities)
-            {
                 if (entityP)
                 {
                     auto &entity = *entityP;
 
-                    if (entity.has<Component::Transform, Component::Collider>())
+                    if (entity.template has<Component::Transform>())
                     {
-                        auto &eTransform = entity.get<Component::Transform>();
-                        auto &eCollider = entity.get<Component::Collider>();
-                        const auto result = GetCollisionRec(taToRect(transform, area), tcToRect(eTransform, eCollider));
+                        cam.target = Vector2Add(entity.template get<Component::Transform>(), comp.offset);
+                    }
+                }
+            });
+        }
+    };
 
-                        /* FIXME: on the right side of the area there is a
-                         * deadzone? */
-                        if (result.width > 0 && result.height > 0)
+    class Locomotion : public System
+    {
+        void tick(Scene &scene) override
+        {
+            scene.eachE<Component::Transform, Component::Locomotion, Component::Collider>(
+                [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
+                    Rectangle collision;
+
+                    if (Vector2LengthSqr(locomotion.vel) != 0)
+                    {
+                        entity.template update<Component::Transform>(
+                            [&locomotion](auto &transform) { transform.pos.x += locomotion.vel.x; });
+
+                        if (IsColliding(scene, tcToRect(transform, collider), collision))
                         {
-                            area.dispatcher.template trigger<Event::Enter>(Event::Enter{entityP});
+                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                                transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
+                            });
+                        }
+
+                        entity.template update<Component::Transform>(
+                            [&locomotion](auto &transform) { transform.pos.y += locomotion.vel.y; });
+
+                        if (IsColliding(scene, tcToRect(transform, collider), collision))
+                        {
+                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                                transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
+                            });
+                        }
+                    }
+                });
+        }
+    };
+
+    namespace Steering
+    {
+        class Test : public System
+        {
+            void tick(Scene &scene) override
+            {
+                scene.each<Component::Steering::Test, Component::Locomotion>([](const auto &test, auto &locomotion) {
+                    locomotion.targetSpeed = test.speed;
+                    Vector2 in;
+
+                    if ((int)GetTime() % 2 == 0)
+                    {
+                        in = {1, 0};
+                    }
+                    else if ((int)GetTime() % 3 == 0)
+                    {
+                        in = {0, 1};
+                    }
+                    else if ((int)GetTime() % 8 == 0)
+                    {
+                        in = {-1, 0};
+                    }
+                    else
+                    {
+                        in = {0, -1};
+                    }
+
+                    locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
+                });
+            }
+        };
+
+        class Player : public System
+        {
+          public:
+            void tick(Scene &scene) override
+            {
+                scene.each<Component::Steering::Player, Component::Locomotion>([](const auto &input, auto &locomotion) {
+                    /* input will be used when`
+                     * I get into multiple input devices,
+                     * custom keybinds and many more advanced ideas... */
+
+                    if (IsKeyDown(KEY_LEFT_SHIFT))
+                    {
+                        locomotion.targetSpeed = SPRINT_SPEED;
+                    }
+                    else
+                    {
+                        locomotion.targetSpeed = WALK_SPEED;
+                    }
+                    Vector2 in = {(float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)),
+                                  (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP))};
+
+                    locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
+                });
+            }
+        };
+    }
+
+    class Area : public System
+    {
+        void tick(Scene &scene) override
+        {
+            scene.each<Component::Area, Component::Transform>([&scene](auto &area, const auto &transform) {
+                const Rectangle search = {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3,
+                                          area.size.y * 3};
+                auto entities = scene.colliders.nearby(search);
+
+                for (auto &entityP : entities)
+                {
+                    if (entityP)
+                    {
+                        auto &entity = *entityP;
+
+                        if (entity.has<Component::Transform, Component::Collider>())
+                        {
+                            auto &eTransform = entity.get<Component::Transform>();
+                            auto &eCollider = entity.get<Component::Collider>();
+                            const auto result =
+                                GetCollisionRec(taToRect(transform, area), tcToRect(eTransform, eCollider));
+
+                            /* FIXME: on the right side of the area there is a
+                             * deadzone? */
+                            if (result.width > 0 && result.height > 0)
+                            {
+                                area.dispatcher.template trigger<Event::Enter>(Event::Enter{entityP});
+                            }
                         }
                     }
                 }
-            }
-        });
-    }
-};
-} // namespace System
+            });
+        }
+    };
+}
 
 void addWorld(Scene &scene)
 {
