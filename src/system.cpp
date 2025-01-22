@@ -32,43 +32,46 @@ namespace System
             }
         });
     }
-
-    void Locomotion::tick(Scene &scene)
+    
+    namespace Locomotion
     {
-        scene.eachE<Component::Transform, Component::Locomotion, Component::Collider>(
-            [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
-                Rectangle collision;
+        void Velocity::tick(Scene &scene)
+        {
+            scene.eachE<Component::Transform, Component::Locomotion::Velocity, Component::Collider>(
+                [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
+                    Rectangle collision;
 
-                if (Vector2LengthSqr(locomotion.vel) != 0)
-                {
-                    entity.template update<Component::Transform>(
-                        [&locomotion](auto &transform) { transform.pos.x += locomotion.vel.x; });
-
-                    if (IsColliding(scene, TcToRect(transform, collider), collision))
+                    if (Vector2LengthSqr(locomotion.vel) != 0)
                     {
-                        entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
-                            transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
-                        });
-                    }
+                        entity.template update<Component::Transform>(
+                            [&locomotion](auto &transform) { transform.pos.x += locomotion.vel.x; });
 
-                    entity.template update<Component::Transform>(
-                        [&locomotion](auto &transform) { transform.pos.y += locomotion.vel.y; });
+                        if (IsColliding(scene, TcToRect(transform, collider), collision))
+                        {
+                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                                transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
+                            });
+                        }
 
-                    if (IsColliding(scene, TcToRect(transform, collider), collision))
-                    {
-                        entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
-                            transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
-                        });
+                        entity.template update<Component::Transform>(
+                            [&locomotion](auto &transform) { transform.pos.y += locomotion.vel.y; });
+
+                        if (IsColliding(scene, TcToRect(transform, collider), collision))
+                        {
+                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                                transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
+                            });
+                        }
                     }
-                }
-            });
-    }
+                });
+        }
+     }
 
     namespace Steering
     {
         void Test::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Test, Component::Locomotion>([](const auto &test, auto &locomotion) {
+            scene.each<Component::Steering::Test, Component::Locomotion::Velocity>([](const auto &test, auto &locomotion) {
                 locomotion.targetSpeed = test.speed;
                 Vector2 in;
 
@@ -95,7 +98,7 @@ namespace System
 
         void Player::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Player, Component::Locomotion>([](const auto &input, auto &locomotion) {
+            scene.each<Component::Steering::Player, Component::Locomotion::Velocity>([](const auto &input, auto &locomotion) {
                 if (IsKeyDown(KEY_LEFT_SHIFT))
                 {
                     locomotion.targetSpeed = SPRINT_SPEED;

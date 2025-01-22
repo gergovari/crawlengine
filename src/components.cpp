@@ -2,17 +2,18 @@
 
 namespace Component
 {
-
-    void Locomotion::setVelocity(Vector2 v)
+    namespace Locomotion
     {
-        vel = Vector2Clamp(v, {-targetSpeed, -targetSpeed}, {targetSpeed, targetSpeed});
-
-        for (auto &modifier : modifiers)
+        void Velocity::setVelocity(Vector2 v)
         {
-            vel = modifier(vel);
+            vel = Vector2Clamp(v, {-targetSpeed, -targetSpeed}, {targetSpeed, targetSpeed});
+
+            for (auto &modifier : modifiers)
+            {
+                vel = modifier(vel);
+            }
+
+            vel = Vector2Scale(vel, GetFrameTime());
         }
-
-        vel = Vector2Scale(vel, GetFrameTime());
     }
-
 }

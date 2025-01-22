@@ -29,12 +29,15 @@ namespace System
       public:
         void tick(Scene &scene) override;
     };
-
-    class Locomotion : public System
+    
+    namespace Locomotion
     {
-      public:
-        void tick(Scene &scene) override;
-    };
+        class Velocity : public System
+        {
+          public:
+            void tick(Scene &scene) override;
+        };
+    }
 
     namespace Steering
     {

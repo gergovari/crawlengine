@@ -9,7 +9,6 @@ struct Entity;
 
 namespace Component
 {
-
     struct Camera
     {
         Camera2D cam = {0};
@@ -31,15 +30,23 @@ namespace Component
         Color color = DARKPURPLE;
         Vector2 size = {0};
     };
-
-    struct Locomotion
+    
+    namespace Locomotion
     {
-        Vector2 vel = {0};
-        float targetSpeed = 0;
-        std::vector<std::function<Vector2(Vector2)>> modifiers;
+        struct Velocity
+        {
+            Vector2 vel = {0};
+            float targetSpeed = 0;
+            std::vector<std::function<Vector2(Vector2)>> modifiers;
 
-        void setVelocity(Vector2 v);
-    };
+            void setVelocity(Vector2 v);
+        };
+
+        struct Multiplier
+        {
+            float multiplier = 0.5f;
+        };
+    }
 
     struct Collider
     {
@@ -52,10 +59,6 @@ namespace Component
         entt::dispatcher dispatcher{};
     };
 
-    struct MovementSlowDown
-    {
-        float multiplier = 0.5f;
-    };
 
     namespace Steering
     {

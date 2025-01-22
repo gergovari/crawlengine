@@ -49,6 +49,7 @@ void addWorld(Scene &scene)
                 entity.add<Tag::Renderable>(-10);
 
                 entity.add<Component::Area>(Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Component::Locomotion::Multiplier>();
             }
             else
             {
@@ -65,7 +66,7 @@ void addPlayer(Scene &scene)
     auto &entity = scene.add();
 
     entity.add<Component::Transform>(Vector2{PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE});
-    entity.add<Component::Locomotion>();
+    entity.add<Component::Locomotion::Velocity>();
     entity.add<Component::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
     entity.add<Component::Steering::Player>();
 
@@ -92,7 +93,7 @@ void addEnemy(Scene &scene)
     entity.add<Component::Transform>(Vector2{3 * TILE_SIZE, 4 * TILE_SIZE});
     entity.add<Component::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
 
-    entity.add<Component::Locomotion>();
+    entity.add<Component::Locomotion::Velocity>();
 
     entity.add<Component::Steering::Test>();
     entity.get<Component::Steering::Test>().speed = WALK_SPEED;
@@ -115,7 +116,7 @@ int main()
         systems.push_back(std::make_unique<Steering::Player>());
         systems.push_back(std::make_unique<Steering::Test>());
 
-        systems.push_back(std::make_unique<Locomotion>());
+        systems.push_back(std::make_unique<Locomotion::Velocity>());
 
         systems.push_back(std::make_unique<Area>());
 
