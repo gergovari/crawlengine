@@ -46,7 +46,7 @@ void addWorld(Scene &scene)
             {
                 entity.add<Component::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
                 entity.add<Component::ColoredRect>(DARKBLUE, Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Tag::Renderable>(-10);
+                entity.add<Tag::Renderable>(-9);
 
                 entity.add<Component::Area>(Vector2{TILE_SIZE, TILE_SIZE});
                 entity.add<Component::Locomotion::Multiplier>();
@@ -102,12 +102,36 @@ void addEnemy(Scene &scene)
     entity.add<Tag::Renderable>();
 }
 
+void onEnterMultiplier(Event::Enter event)
+{
+    auto &entity = *event.entity;
+
+    if (entity.has<Component::Locomotion>) {
+        auto &locomotion = entity.get<Component::Locomotion>();
+
+        locomotion.
+    }
+}
+
+void onExitMultiplier(Event::Exit event)
+{
+    printf("exited: %p\n", event.entity);
+}
+
 int main()
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
 
     Scene scene;
+    
+    scene.onConstruct<Component::Locomotion::Multiplier>([](auto &entity) {
+        if (entity.template has<Component::Area>()) {
+            auto &area = entity.template get<Component::Area>();
+            area.dispatcher.template sink<Event::Enter>().template connect<&onEnterMultiplier>();
+            area.dispatcher.template sink<Event::Exit>().template connect<&onExitMultiplier>();
+        }
+    });
 
     std::vector<std::unique_ptr<System::System>> systems;
     {
