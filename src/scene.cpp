@@ -13,7 +13,9 @@ void SceneCallback::connect(entt::registry &registry, entt::entity e)
 
 #define SPATIAL_UNIT 50
 
-Scene::Scene() : renderables(this), colliders(this) {}
+Scene::Scene() : renderables(this), colliders(this)
+{
+}
 
 Entity &Scene::add()
 {
