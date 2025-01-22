@@ -3,6 +3,7 @@
 #include "components.hpp"
 #include "entity.hpp"
 #include "renderables.hpp"
+#include "collidables.hpp"
 #include "spatial_hash_map.hpp"
 #include <entt/entt.hpp>
 #include <forward_list>
@@ -23,12 +24,9 @@ class Scene
     std::forward_list<SceneCallback> callbacks;
 
     Renderables renderables;
-    SpatialHashMap<Entity *> colliders;
+    Collidables colliders;
 
     Scene();
-
-    void setupColliders();
-    void setupTransforms();
 
     Entity &add();
     Entity *get(entt::entity e);

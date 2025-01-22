@@ -13,39 +13,7 @@ void SceneCallback::connect(entt::registry &registry, entt::entity e)
 
 #define SPATIAL_UNIT 50
 
-void Scene::setupColliders()
-{
-    onConstruct<Component::Collider>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
-        {
-            auto &transform = entity.template get<Component::Transform>();
-            auto &collider = entity.template get<Component::Collider>();
-
-            colliders.insert(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
-        }
-    });
-
-    onDestroy<Component::Collider>([this](auto &entity) { colliders.remove(&entity); });
-}
-
-void Scene::setupTransforms()
-{
-    onUpdate<Component::Transform>([this](auto &entity) {
-        if (entity.template has<Component::Collider>())
-        {
-            auto &transform = entity.template get<Component::Transform>();
-            auto &collider = entity.template get<Component::Collider>();
-
-            colliders.update(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
-        }
-    });
-}
-
-Scene::Scene() : renderables(this), colliders(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT))
-{
-    setupColliders();
-    setupTransforms();
-}
+Scene::Scene() : renderables(this), colliders(this) {}
 
 Entity &Scene::add()
 {
