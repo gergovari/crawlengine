@@ -1,5 +1,15 @@
 #include "scene.hpp"
 
+SceneCallback::SceneCallback(Scene *s, EntityCallback f) : scene(s), func(f) {};
+
+void SceneCallback::connect(entt::registry &registry, entt::entity e)
+{
+    auto *entityP = scene->get(e);
+    if (entityP) {
+        func(*entityP);
+    }
+}
+
 const RenderableItem<Entity *> Scene::eToRI(Entity &entity)
 {
     return {&entity, entity.get<Tag::Renderable>().z};
@@ -30,23 +40,17 @@ void Scene::onDestroyCollider(entt::registry &registry, entt::entity e)
     }
 }
 
-void Scene::onConstructRenderable(entt::registry &registry, entt::entity e)
+void Scene::onConstructRenderable(Entity &entity)
 {
-    auto *entityP = get(e);
-    if (entityP)
+    if (entity.has<Component::Transform>())
     {
-        auto &entity = *entityP;
+        auto &transform = entity.get<Component::Transform>();
 
-        if (entity.has<Component::Transform>())
+        if (entity.has<Component::ColoredRect>())
         {
-            auto &transform = entity.get<Component::Transform>();
-
-            if (entity.has<Component::ColoredRect>())
-            {
-                auto &coloredRect = entity.get<Component::ColoredRect>();
-                renderables.insert(eToRI(entity),
-                                   {transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
-            }
+            auto &coloredRect = entity.get<Component::ColoredRect>();
+            renderables.insert(eToRI(entity),
+                    {transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
         }
     }
 }
@@ -128,15 +132,28 @@ void Scene::onUpdateRenderable(entt::registry &registry, entt::entity e)
 
 void Scene::setupRenderables()
 {
-    onConstruct<Tag::Renderable, &Scene::onConstructRenderable>();
-    onDestroy<Tag::Renderable, &Scene::onDestroyRenderable>();
-    onUpdate<Tag::Renderable, &Scene::onUpdateRenderable>();
+    onConstruct<Tag::Renderable>([this](auto &entity) {
+        if (entity.template has<Component::Transform>())
+        {
+            auto &transform = entity.template get<Component::Transform>();
+
+            if (entity.template has<Component::ColoredRect>())
+            {
+                auto &coloredRect = entity.template get<Component::ColoredRect>();
+                renderables.insert(eToRI(entity),
+                        {transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
+            }
+        }
+    });
+
+    //onDestroy<Tag::Renderable, &Scene::onDestroyRenderable>();
+    //onUpdate<Tag::Renderable, &Scene::onUpdateRenderable>();
 }
 
 void Scene::setupColliders()
 {
-    onConstruct<Component::Collider, &Scene::onConstructCollider>();
-    onDestroy<Component::Collider, &Scene::onDestroyCollider>();
+    //onConstruct<Component::Collider, &Scene::onConstructCollider>();
+    //onDestroy<Component::Collider, &Scene::onDestroyCollider>();
 }
 
 #define SPATIAL_UNIT 50
@@ -146,7 +163,7 @@ Scene::Scene()
 {
     setupRenderables();
     setupColliders();
-    onUpdate<Component::Transform, &Scene::onUpdateTransform>();
+    //onUpdate<Component::Transform, &Scene::onUpdateTransform>();
 }
 
 Entity &Scene::add()
@@ -155,9 +172,9 @@ Entity &Scene::add()
 }
 
 Entity *Scene::get(entt::entity e)
-{
+{   
     auto it = std::find_if(entities.begin(), entities.end(),
-                           [&e](auto &entity) { return static_cast<entt::entity>(entity) == e; });
+                    [&e](auto &entity) { return static_cast<entt::entity>(entity) == e; });
 
     return (it != entities.end()) ? &(*it) : nullptr;
 }
