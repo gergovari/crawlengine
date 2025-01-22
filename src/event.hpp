@@ -8,4 +8,9 @@ namespace Event
     {
         Entity *entity;
     };
+
+    struct Exit
+    {
+        Entity *entity;
+    };
 }

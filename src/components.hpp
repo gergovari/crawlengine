@@ -5,6 +5,8 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <unordered_set>
+
 struct Entity;
 
 namespace Component
@@ -30,7 +32,7 @@ namespace Component
         Color color = DARKPURPLE;
         Vector2 size = {0};
     };
-    
+
     namespace Locomotion
     {
         struct Velocity
@@ -56,9 +58,9 @@ namespace Component
     struct Area
     {
         Vector2 size = {0};
+        std::unordered_set<Entity *> entities;
         entt::dispatcher dispatcher{};
     };
-
 
     namespace Steering
     {

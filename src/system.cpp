@@ -32,7 +32,7 @@ namespace System
             }
         });
     }
-    
+
     namespace Locomotion
     {
         void Velocity::tick(Scene &scene)
@@ -65,65 +65,70 @@ namespace System
                     }
                 });
         }
-     }
+    }
 
     namespace Steering
     {
         void Test::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Test, Component::Locomotion::Velocity>([](const auto &test, auto &locomotion) {
-                locomotion.targetSpeed = test.speed;
-                Vector2 in;
+            scene.each<Component::Steering::Test, Component::Locomotion::Velocity>(
+                [](const auto &test, auto &locomotion) {
+                    locomotion.targetSpeed = test.speed;
+                    Vector2 in;
 
-                if ((int)GetTime() % 2 == 0)
-                {
-                    in = {1, 0};
-                }
-                else if ((int)GetTime() % 3 == 0)
-                {
-                    in = {0, 1};
-                }
-                else if ((int)GetTime() % 8 == 0)
-                {
-                    in = {-1, 0};
-                }
-                else
-                {
-                    in = {0, -1};
-                }
+                    if ((int)GetTime() % 2 == 0)
+                    {
+                        in = {1, 0};
+                    }
+                    else if ((int)GetTime() % 3 == 0)
+                    {
+                        in = {0, 1};
+                    }
+                    else if ((int)GetTime() % 8 == 0)
+                    {
+                        in = {-1, 0};
+                    }
+                    else
+                    {
+                        in = {0, -1};
+                    }
 
-                locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-            });
+                    locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
+                });
         }
 
         void Player::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Player, Component::Locomotion::Velocity>([](const auto &input, auto &locomotion) {
-                if (IsKeyDown(KEY_LEFT_SHIFT))
-                {
-                    locomotion.targetSpeed = SPRINT_SPEED;
-                }
-                else
-                {
-                    locomotion.targetSpeed = WALK_SPEED;
-                }
-                Vector2 in = {(float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)),
-                              (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP))};
+            scene.each<Component::Steering::Player, Component::Locomotion::Velocity>(
+                [](const auto &input, auto &locomotion) {
+                    if (IsKeyDown(KEY_LEFT_SHIFT))
+                    {
+                        locomotion.targetSpeed = SPRINT_SPEED;
+                    }
+                    else
+                    {
+                        locomotion.targetSpeed = WALK_SPEED;
+                    }
+                    Vector2 in = {(float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)),
+                                  (float)(IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP))};
 
-                locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-            });
+                    locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
+                });
         }
     }
 
     void Area::tick(Scene &scene)
     {
-        scene.each<Component::Area, Component::Transform>([&scene](auto &area, const auto &transform) {
+        scene.each<Component::Area, Component::Transform>([this, &scene](auto &area, const auto &transform) {
             const Rectangle search = {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3,
                                       area.size.y * 3};
-            auto entities = scene.colliders.nearby(search);
+            auto nearby = scene.colliders.nearby(search);
+            std::unordered_set<Entity *> current;
 
-            for (auto &entityP : entities)
+            int tmp = 0;
+            for (auto &entityP : nearby)
             {
+                tmp++;
                 if (entityP)
                 {
                     auto &entity = *entityP;
@@ -136,9 +141,27 @@ namespace System
 
                         if (result.width > 0 && result.height > 0)
                         {
-                            area.dispatcher.template trigger<Event::Enter>(Event::Enter{entityP});
+                            if (area.entities.find(entityP) == area.entities.end())
+                            {
+                                area.dispatcher.template trigger<Event::Enter>(Event::Enter{entityP});
+                                area.entities.insert(entityP);
+                            }
+                            current.insert(entityP);
                         }
                     }
+                }
+            }
+
+            for (auto it = area.entities.begin(); it != area.entities.end();)
+            {
+                if (current.find(*it) == current.end())
+                {
+                    area.dispatcher.template trigger<Event::Exit>(Event::Exit{*it});
+                    it = area.entities.erase(it);
+                }
+                else
+                {
+                    ++it;
                 }
             }
         });

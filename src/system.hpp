@@ -1,10 +1,12 @@
 #pragma once
 
 #include "components.hpp"
+#include "entity.hpp"
 #include "event.hpp"
 #include "raylib.h"
 #include "raylib_extended.hpp"
 #include "scene.hpp"
+#include <unordered_set>
 
 #define WALK_SPEED 120.0f
 #define SPRINT_SPEED WALK_SPEED * 2
@@ -29,7 +31,7 @@ namespace System
       public:
         void tick(Scene &scene) override;
     };
-    
+
     namespace Locomotion
     {
         class Velocity : public System
