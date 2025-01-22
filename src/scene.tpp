@@ -21,16 +21,16 @@ template <typename... ComponentTypes, typename Func> void Scene::each(Func &&fun
 
 template <typename ComponentType> void Scene::onConstruct(EntityCallback func)
 {
-    registry.on_construct<ComponentType>().template connect<&SceneCallback::connect>(callbacks.emplace_front(this, func));
+    registry.on_construct<ComponentType>().template connect<&SceneCallback::connect>(
+        callbacks.emplace_front(this, func));
 }
 
-/*
-template<typename ComponentType, auto Func, typename Class> void Scene::onUpdate(Class inst)
+template <typename ComponentType> void Scene::onUpdate(EntityCallback func)
 {
-    registry.on_update<ComponentType>().template connect<Func>(inst);
+    registry.on_update<ComponentType>().template connect<&SceneCallback::connect>(callbacks.emplace_front(this, func));
 }
 
-template<typename ComponentType, auto Func, typename Class> void Scene::onDestroy(Class inst)
+template <typename ComponentType> void Scene::onDestroy(EntityCallback func)
 {
-    registry.on_destroy<ComponentType>().template connect<Func>(inst);
-}*/
+    registry.on_destroy<ComponentType>().template connect<&SceneCallback::connect>(callbacks.emplace_front(this, func));
+}

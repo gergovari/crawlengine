@@ -7,7 +7,7 @@
 #include <entt/entt.hpp>
 #include <forward_list>
 
-typedef std::function<void(Entity&)> EntityCallback;
+typedef std::function<void(Entity &)> EntityCallback;
 class SceneCallback;
 
 class Scene
@@ -17,18 +17,6 @@ class Scene
 
     static const RenderableItem<Entity *> eToRI(Entity &entity);
     static const RenderableItem<Entity *> eToRI(Entity &entity, int z);
-
-    void onConstructRenderable(Entity &entity);
-
-    void onUpdateRenderable(entt::registry &registry, entt::entity e);
-    void onDestroyRenderable(entt::registry &registry, entt::entity e);
-    void onUpdateTransformForRenderable(Entity &entity);
-
-    void onConstructCollider(entt::registry &registry, entt::entity e);
-    void onDestroyCollider(entt::registry &registry, entt::entity e);
-    void onUpdateTransformForCollider(Entity &entity);
-
-    void onUpdateTransform(entt::registry &registry, entt::entity e);
 
   public:
     std::forward_list<Entity> entities;
@@ -40,6 +28,7 @@ class Scene
 
     void setupRenderables();
     void setupColliders();
+    void setupTransforms();
 
     Entity &add();
     Entity *get(entt::entity e);
@@ -49,23 +38,20 @@ class Scene
     template <typename... ComponentTypes, typename Func> void each(Func &&func);
 
     template <typename ComponentType> void onConstruct(EntityCallback func);
-    /*template <typename ComponentType, auto Func> void onUpdate();
-    template <typename ComponentType, auto Func> void onDestroy();
-
-    template <typename ComponentType, auto Func, typename Class> void onConstruct(Class inst);
-    template <typename ComponentType, auto Func, typename Class> void onUpdate(Class inst);
-    template <typename ComponentType, auto Func, typename Class> void onDestroy(Class inst);*/
+    template <typename ComponentType> void onUpdate(EntityCallback func);
+    template <typename ComponentType> void onDestroy(EntityCallback func);
 };
 
-class SceneCallback {
-    private:
-        Scene *scene;
-        EntityCallback func;
+class SceneCallback
+{
+  private:
+    Scene *scene;
+    EntityCallback func;
 
-    public:
-        SceneCallback(Scene *s, EntityCallback f);
-    
-        void connect(entt::registry &registry, entt::entity e);
+  public:
+    SceneCallback(Scene *s, EntityCallback f);
+
+    void connect(entt::registry &registry, entt::entity e);
 };
 
 #include "scene.tpp"
