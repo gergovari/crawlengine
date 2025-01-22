@@ -16,7 +16,17 @@ struct SpatialPairHash
     std::size_t operator()(const SpatialPair &pair) const;
 };
 
-template <typename T> class SpatialHashMap
+template <typename T> class SpacePartitioner
+{
+  public:
+    virtual void insert(T item, Rectangle rect) = 0;
+    virtual void update(T item, Rectangle rect) = 0;
+    virtual void replace(T item, T t) = 0;
+    virtual void remove(T item) = 0;
+    virtual SpatialCell<T> nearby(Rectangle rect) = 0;
+};
+
+template <typename T> class SpatialHashMap : public SpacePartitioner<T>
 {
   private:
     std::unordered_map<SpatialPair, SpatialCell<T>, SpatialPairHash> cells;
@@ -26,7 +36,7 @@ template <typename T> class SpatialHashMap
     void forEach(std::function<bool(SpatialCell<T> &)> func);
 
   public:
-    explicit SpatialHashMap(SpatialPair u);
+    SpatialHashMap(SpatialPair u);
 
     void insert(T item, Rectangle rect);
     void update(T item, Rectangle rect);

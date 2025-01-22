@@ -7,7 +7,7 @@
 #include <array>
 
 Rectangle GetCameraView(Camera2D &camera);
-void DrawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity *>> &renderables);
+void DrawRenderables(Camera2D &cam, Renderables &renderables);
 std::array<Rectangle, 8> NeighbouringColliders(Scene &scene, Rectangle collider);
 bool IsColliding(Scene &scene, Rectangle collider, Rectangle &result);
 Rectangle TcToRect(const Component::Transform &transform, const Component::Collider &collider);

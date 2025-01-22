@@ -14,15 +14,9 @@ Rectangle GetCameraView(Camera2D &camera)
     return view;
 }
 
-void DrawRenderables(Camera2D &cam, SpatialHashMap<RenderableItem<Entity *>> &renderables)
+void DrawRenderables(Camera2D &cam, Renderables &renderables)
 {
     auto view = GetCameraView(cam);
-
-    view.x -= view.width / 2;
-    view.y -= view.height / 2;
-    view.width *= 2;
-    view.height *= 2;
-
     auto items = renderables.nearby(view);
 
     items.sort([](auto const &a, auto const &b) { return a.z < b.z; });

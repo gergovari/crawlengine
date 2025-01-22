@@ -21,12 +21,12 @@ class Scene
   public:
     std::forward_list<Entity> entities;
     std::forward_list<SceneCallback> callbacks;
-    SpatialHashMap<RenderableItem<Entity *>> renderables;
+
+    Renderables renderables;
     SpatialHashMap<Entity *> colliders;
 
     Scene();
 
-    void setupRenderables();
     void setupColliders();
     void setupTransforms();
 

@@ -11,74 +11,7 @@ void SceneCallback::connect(entt::registry &registry, entt::entity e)
     }
 }
 
-const RenderableItem<Entity *> Scene::eToRI(Entity &entity)
-{
-    return {&entity, entity.get<Tag::Renderable>().z};
-}
-
-const RenderableItem<Entity *> Scene::eToRI(Entity &entity, int z)
-{
-    return {&entity, z};
-}
-
-void Scene::setupRenderables()
-{
-    onConstruct<Tag::Renderable>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
-        {
-            auto &transform = entity.template get<Component::Transform>();
-
-            if (entity.template has<Component::ColoredRect>())
-            {
-                auto &coloredRect = entity.template get<Component::ColoredRect>();
-                renderables.insert(eToRI(entity),
-                                   {transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
-            }
-        }
-    });
-
-    onUpdate<Tag::Renderable>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
-        {
-            auto &transform = entity.template get<Component::Transform>();
-
-            if (entity.template has<Component::ColoredRect>())
-            {
-                const auto renderable = eToRI(entity);
-                renderables.replace(renderable, renderable);
-            }
-        }
-    });
-
-    onDestroy<Tag::Renderable>([this](auto &entity) { renderables.remove(eToRI(entity)); });
-}
-
-void Scene::setupTransforms()
-{
-    onUpdate<Component::Transform>([this](auto &entity) {
-        auto &transform = entity.template get<Component::Transform>();
-
-        if (entity.template has<Tag::Renderable>())
-        {
-            if (entity.template has<Component::ColoredRect>())
-            {
-                auto &coloredRect = entity.template get<Component::ColoredRect>();
-                renderables.update(eToRI(entity),
-                                   Rectangle{transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
-            }
-        }
-    });
-
-    onUpdate<Component::Transform>([this](auto &entity) {
-        if (entity.template has<Component::Collider>())
-        {
-            auto &transform = entity.template get<Component::Transform>();
-            auto &collider = entity.template get<Component::Collider>();
-
-            colliders.update(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
-        }
-    });
-}
+#define SPATIAL_UNIT 50
 
 void Scene::setupColliders()
 {
@@ -95,12 +28,21 @@ void Scene::setupColliders()
     onDestroy<Component::Collider>([this](auto &entity) { colliders.remove(&entity); });
 }
 
-#define SPATIAL_UNIT 50
-
-Scene::Scene()
-    : renderables(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT)), colliders(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT))
+void Scene::setupTransforms()
 {
-    setupRenderables();
+    onUpdate<Component::Transform>([this](auto &entity) {
+        if (entity.template has<Component::Collider>())
+        {
+            auto &transform = entity.template get<Component::Transform>();
+            auto &collider = entity.template get<Component::Collider>();
+
+            colliders.update(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
+        }
+    });
+}
+
+Scene::Scene() : renderables(this), colliders(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT))
+{
     setupColliders();
     setupTransforms();
 }
