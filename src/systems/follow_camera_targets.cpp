@@ -1,7 +1,7 @@
 #include "systems/follow_camera_targets.hpp"
 
 #include "components/components.hpp"
-#include "scene.hpp"
+#include "scene/scene.hpp"
 
 namespace Systems {
     void FollowCameraTargets::tick(Scene &scene)

@@ -1,8 +1,8 @@
 #include "systems/locomotion/velocity.hpp"
 
-#include "raylib_extended.hpp"
-#include "scene.hpp"
-#include "entity.hpp"
+#include "misc/raylib_extended.hpp"
+#include "scene/scene.hpp"
+#include "entity/entity.hpp"
 
 namespace Systems {
     namespace Locomotion

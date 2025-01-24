@@ -4,13 +4,12 @@
 #include <unordered_set>
 
 #include "components/components.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "events/events.hpp"
-#include "raylib.h"
-#include "raylib_extended.hpp"
 #include "raymath.h"
-#include "renderables.hpp"
-#include "scene.hpp"
+#include "misc/raylib_extended.hpp"
+#include "scene/renderables.hpp"
+#include "scene/scene.hpp"
 #include "systems/systems.hpp"
 
 #define WINDOW_TITLE "CRAWLengine"

@@ -1,7 +1,7 @@
-#include "raylib_extended.hpp"
+#include "misc/raylib_extended.hpp"
 
 #include "systems/render_to_cameras.hpp"
-#include "scene.hpp"
+#include "scene/scene.hpp"
 #include "components/components.hpp"
 
 namespace Systems {

@@ -1,9 +1,9 @@
 #include "systems/area.hpp"
 
-#include "raylib_extended.hpp"
+#include "misc/raylib_extended.hpp"
 #include "components/components.hpp"
-#include "scene.hpp"
-#include "entity.hpp"
+#include "scene/scene.hpp"
+#include "entity/entity.hpp"
 #include "events/events.hpp"
 
 namespace Systems {

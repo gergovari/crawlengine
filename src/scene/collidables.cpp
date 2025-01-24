@@ -1,8 +1,8 @@
-#include "collidables.hpp"
+#include "scene/collidables.hpp"
 
 #include "components/components.hpp"
-#include "entity.hpp"
-#include "scene.hpp"
+#include "entity/entity.hpp"
+#include "scene/scene.hpp"
 
 #define SPATIAL_UNIT 50
 

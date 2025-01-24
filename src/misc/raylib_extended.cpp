@@ -1,8 +1,8 @@
 
-#include "raylib_extended.hpp"
-#include "entity.hpp"
-#include "renderables.hpp"
-#include "scene.hpp"
+#include "misc/raylib_extended.hpp"
+#include "entity/entity.hpp"
+#include "scene/renderables.hpp"
+#include "scene/scene.hpp"
 
 bool IsRectValid(Rectangle rect)
 {

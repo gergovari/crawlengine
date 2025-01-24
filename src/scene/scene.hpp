@@ -1,8 +1,8 @@
 #pragma once
 
-#include "collidables.hpp"
-#include "entity.hpp"
-#include "renderables.hpp"
+#include "scene/collidables.hpp"
+#include "scene/renderables.hpp"
+#include "entity/entity.hpp"
 #include <forward_list>
 
 class SceneCallback;
