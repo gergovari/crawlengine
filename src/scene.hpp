@@ -29,10 +29,11 @@ class Scene
     Scene();
 
     Entity &add();
-    Entity *get(entt::entity e);
+    Entity *get(EntityId e);
     void remove(Entity &entity);
 
-    template <typename... ComponentTypes, typename Func> void eachE(Func &&func);
+    template <typename... ComponentTypes, typename Func> void eachEntity(Func &&func);
+    template <typename... ComponentTypes, typename Func> void eachId(Func &&func);
     template <typename... ComponentTypes, typename Func> void each(Func &&func);
 
     template <typename ComponentType> void onConstruct(EntityCallback func);

@@ -1,6 +1,11 @@
 #include "raylib_extended.hpp"
 #include "components.hpp"
 
+bool IsRectValid(Rectangle rect)
+{
+    return rect.width > 0 && rect.height > 0;
+}
+
 Rectangle GetCameraView(Camera2D &camera)
 {
     float scale = 1.0f / camera.zoom;

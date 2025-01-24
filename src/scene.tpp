@@ -2,15 +2,21 @@
 
 #include "scene.hpp"
 
-template <typename... ComponentTypes, typename Func> void Scene::eachE(Func &&func)
+template <typename... ComponentTypes, typename Func> void Scene::eachEntity(Func &&func)
 {
-    registry.view<ComponentTypes...>().each([this, func = std::forward<Func>(func)](auto e, auto &...components) {
-        auto *entityP = get(e);
+    registry.view<ComponentTypes...>().each([this, func = std::forward<Func>(func)](auto id, auto &...components) {
+        auto *entityP = get(id);
         if (entityP)
         {
             func(*entityP, components...);
         }
     });
+}
+
+template <typename... ComponentTypes, typename Func> void Scene::eachId(Func &&func)
+{
+    registry.view<ComponentTypes...>().each(
+        [func = std::forward<Func>(func)](auto id, auto &...components) { func(id, components...); });
 }
 
 template <typename... ComponentTypes, typename Func> void Scene::each(Func &&func)

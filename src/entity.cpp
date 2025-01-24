@@ -2,20 +2,20 @@
 
 Entity::Entity(entt::registry *r) : registry(r)
 {
-    entity = registry->create();
+    id = registry->create();
 }
 
 Entity::~Entity()
 {
-    registry->destroy(entity);
+    registry->destroy(id);
 }
 
-Entity::operator entt::entity() const
+Entity::operator EntityId() const
 {
-    return entity;
+    return id;
 }
 
 bool Entity::operator==(const Entity &other) const
 {
-    return (registry == other.registry) && (entity == other.entity);
+    return (registry == other.registry) && (id == other.id);
 }

@@ -6,6 +6,7 @@
 #include "scene.hpp"
 #include <array>
 
+bool IsRectValid(Rectangle rect);
 Rectangle GetCameraView(Camera2D &camera);
 void DrawRenderables(Camera2D &cam, Renderables &renderables);
 std::array<Rectangle, 8> NeighbouringColliders(Scene &scene, Rectangle collider);

@@ -48,7 +48,7 @@ void addWorld(Scene &scene)
                 entity.add<Component::ColoredRect>(DARKBLUE, Vector2{TILE_SIZE, TILE_SIZE});
                 entity.add<Tag::Renderable>(-9);
 
-                entity.add<Component::Area>(Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Component::Area>((size_t)0, Vector2{TILE_SIZE, TILE_SIZE});
                 entity.add<Component::Locomotion::Multiplier>();
             }
             else
@@ -105,17 +105,31 @@ void addEnemy(Scene &scene)
 void onEnterMultiplier(Event::Enter event)
 {
     auto &entity = *event.entity;
+    auto &area = *event.area;
 
-    if (entity.has<Component::Locomotion>) {
-        auto &locomotion = entity.get<Component::Locomotion>();
+    if (entity.has<Component::Locomotion::Velocity>() && area.has<Component::Locomotion::Multiplier>())
+    {
+        auto &locomotion = entity.get<Component::Locomotion::Velocity>();
+        auto &mult = area.get<Component::Locomotion::Multiplier>();
 
-        locomotion.
+        locomotion.multiplier *= mult.multiplier;
+        // printf("%f\n", locomotion.multiplier);
     }
 }
 
 void onExitMultiplier(Event::Exit event)
 {
-    printf("exited: %p\n", event.entity);
+    auto &entity = *event.entity;
+    auto &area = *event.area;
+
+    if (entity.has<Component::Locomotion::Velocity>() && area.has<Component::Locomotion::Multiplier>())
+    {
+        auto &locomotion = entity.get<Component::Locomotion::Velocity>();
+        auto &mult = area.get<Component::Locomotion::Multiplier>();
+
+        locomotion.multiplier /= mult.multiplier;
+        // printf("%f\n", locomotion.multiplier);
+    }
 }
 
 int main()
@@ -124,9 +138,10 @@ int main()
     SetTargetFPS(60);
 
     Scene scene;
-    
+
     scene.onConstruct<Component::Locomotion::Multiplier>([](auto &entity) {
-        if (entity.template has<Component::Area>()) {
+        if (entity.template has<Component::Area>())
+        {
             auto &area = entity.template get<Component::Area>();
             area.dispatcher.template sink<Event::Enter>().template connect<&onEnterMultiplier>();
             area.dispatcher.template sink<Event::Exit>().template connect<&onExitMultiplier>();
@@ -150,7 +165,7 @@ int main()
 
     addWorld(scene);
     addPlayer(scene);
-    addEnemy(scene);
+    // addEnemy(scene);
 
     while (!WindowShouldClose())
     {

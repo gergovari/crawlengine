@@ -39,7 +39,7 @@ namespace Component
         {
             Vector2 vel = {0};
             float targetSpeed = 0;
-            std::vector<std::function<Vector2(Vector2)>> modifiers;
+            float multiplier = 1;
 
             void setVelocity(Vector2 v);
         };
@@ -57,8 +57,10 @@ namespace Component
 
     struct Area
     {
+        size_t id = 0;
         Vector2 size = {0};
-        std::unordered_set<Entity *> entities;
+
+        std::vector<Entity *> current;
         entt::dispatcher dispatcher{};
     };
 

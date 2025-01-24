@@ -1,5 +1,7 @@
 #include "system.hpp"
 
+#include "raylib_extended.hpp"
+
 namespace System
 {
     void RenderToCameras::tick(Scene &scene)
@@ -37,14 +39,15 @@ namespace System
     {
         void Velocity::tick(Scene &scene)
         {
-            scene.eachE<Component::Transform, Component::Locomotion::Velocity, Component::Collider>(
+            scene.eachEntity<Component::Transform, Component::Locomotion::Velocity, Component::Collider>(
                 [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
                     Rectangle collision;
 
                     if (Vector2LengthSqr(locomotion.vel) != 0)
                     {
-                        entity.template update<Component::Transform>(
-                            [&locomotion](auto &transform) { transform.pos.x += locomotion.vel.x; });
+                        entity.template update<Component::Transform>([&locomotion](auto &transform) {
+                            transform.pos.x += locomotion.vel.x * locomotion.multiplier;
+                        });
 
                         if (IsColliding(scene, TcToRect(transform, collider), collision))
                         {
@@ -53,8 +56,9 @@ namespace System
                             });
                         }
 
-                        entity.template update<Component::Transform>(
-                            [&locomotion](auto &transform) { transform.pos.y += locomotion.vel.y; });
+                        entity.template update<Component::Transform>([&locomotion](auto &transform) {
+                            transform.pos.y += locomotion.vel.y * locomotion.multiplier;
+                        });
 
                         if (IsColliding(scene, TcToRect(transform, collider), collision))
                         {
@@ -117,53 +121,68 @@ namespace System
         }
     }
 
+    const Rectangle Area::CreateSearchRect(const Component::Transform &transform, const Component::Area &area)
+    {
+        return {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3, area.size.y * 3};
+    }
+
     void Area::tick(Scene &scene)
     {
-        scene.each<Component::Area, Component::Transform>([this, &scene](auto &area, const auto &transform) {
-            const Rectangle search = {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3,
-                                      area.size.y * 3};
-            auto nearby = scene.colliders.nearby(search);
-            std::unordered_set<Entity *> current;
+        scene.eachId<Component::Area, Component::Transform>([this, &scene](auto id, auto &area, const auto &transform) {
+            auto entities = scene.colliders.nearby(CreateSearchRect(transform, area));
+            auto &counters = areas[area.id];
+            std::vector<Entity *> current;
 
-            int tmp = 0;
-            for (auto &entityP : nearby)
+            for (auto &p : entities)
             {
-                tmp++;
-                if (entityP)
+                auto &entity = *p;
+
+                if (entity.template has<Component::Transform, Component::Collider>())
                 {
-                    auto &entity = *entityP;
+                    const auto collision = GetCollisionRec(TaToRect(transform, area),
+                                                           TcToRect(entity.template get<Component::Transform>(),
+                                                                    entity.template get<Component::Collider>()));
 
-                    if (entity.has<Component::Transform, Component::Collider>())
+                    if (IsRectValid(collision))
                     {
-                        auto &eTransform = entity.get<Component::Transform>();
-                        auto &eCollider = entity.get<Component::Collider>();
-                        const auto result = GetCollisionRec(TaToRect(transform, area), TcToRect(eTransform, eCollider));
-
-                        if (result.width > 0 && result.height > 0)
+                        current.push_back(p);
+                        if (std::find(area.current.begin(), area.current.end(), p) == area.current.end())
                         {
-                            if (area.entities.find(entityP) == area.entities.end())
+                            auto it = std::find_if(counters.begin(), counters.end(),
+                                                   [&p](const auto &counted) { return p == counted.entity; });
+
+                            if (it == counters.end())
                             {
-                                area.dispatcher.template trigger<Event::Enter>(Event::Enter{entityP});
-                                area.entities.insert(entityP);
+                                area.dispatcher.template trigger<Event::Enter>(Event::Enter{p, scene.get(id)});
+                                counters.emplace_back(p, 1);
                             }
-                            current.insert(entityP);
+                            else
+                            {
+                                it->count++;
+                            }
                         }
                     }
                 }
             }
 
-            for (auto it = area.entities.begin(); it != area.entities.end();)
+            for (auto counted = counters.begin(); counted != counters.end();)
             {
-                if (current.find(*it) == current.end())
+                bool isHere = std::find(current.begin(), current.end(), counted->entity) != current.end();
+                bool wasHere =
+                    std::find(area.current.begin(), area.current.end(), counted->entity) != area.current.end();
+                if (wasHere && !isHere)
                 {
-                    area.dispatcher.template trigger<Event::Exit>(Event::Exit{*it});
-                    it = area.entities.erase(it);
+                    if (--counted->count <= 0)
+                    {
+                        area.dispatcher.template trigger<Event::Exit>(Event::Exit{counted->entity, scene.get(id)});
+                        counted = counters.erase(counted);
+                        continue;
+                    }
                 }
-                else
-                {
-                    ++it;
-                }
+                ++counted;
             }
+
+            area.current = current;
         });
     }
 }

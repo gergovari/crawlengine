@@ -2,17 +2,19 @@
 
 #include <entt/entt.hpp>
 
+typedef entt::entity EntityId;
+
 class Entity
 {
   private:
     entt::registry *registry;
-    entt::entity entity;
+    EntityId id;
 
   public:
     explicit Entity(entt::registry *r);
     ~Entity();
 
-    operator entt::entity() const;
+    operator EntityId() const;
 
     bool operator==(const Entity &other) const;
 

@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include "raylib_extended.hpp"
 #include "scene.hpp"
+#include <unordered_map>
 #include <unordered_set>
 
 #define WALK_SPEED 120.0f
@@ -58,6 +59,17 @@ namespace System
 
     class Area : public System
     {
+      private:
+        struct CountedArea
+        {
+            Entity *entity = nullptr;
+            size_t count = 0;
+        };
+
+        std::unordered_map<size_t, std::vector<CountedArea>> areas;
+
+        const static Rectangle CreateSearchRect(const Component::Transform &transform, const Component::Area &area);
+
       public:
         void tick(Scene &scene) override;
     };
