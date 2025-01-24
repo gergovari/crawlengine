@@ -1,5 +1,6 @@
 #include "system.hpp"
 
+#include "events/events.hpp"
 #include "raylib_extended.hpp"
 
 namespace System
@@ -153,7 +154,7 @@ namespace System
 
                             if (it == counters.end())
                             {
-                                area.dispatcher.template trigger<Event::Enter>(Event::Enter{p, scene.get(id)});
+                                area.dispatcher.template trigger(Event::Area::Enter{p, scene.get(id)});
                                 counters.emplace_back(p, 1);
                             }
                             else
@@ -174,7 +175,7 @@ namespace System
                 {
                     if (--counted->count <= 0)
                     {
-                        area.dispatcher.template trigger<Event::Exit>(Event::Exit{counted->entity, scene.get(id)});
+                        area.dispatcher.template trigger(Event::Area::Exit{counted->entity, scene.get(id)});
                         counted = counters.erase(counted);
                         continue;
                     }

@@ -2,7 +2,6 @@
 
 #include "components/components.hpp"
 #include "entity.hpp"
-#include "event.hpp"
 #include "raylib.h"
 #include "raylib_extended.hpp"
 #include "scene.hpp"

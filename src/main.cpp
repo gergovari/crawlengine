@@ -5,7 +5,7 @@
 
 #include "components/components.hpp"
 #include "entity.hpp"
-#include "event.hpp"
+#include "events/events.hpp"
 #include "raylib.h"
 #include "raylib_extended.hpp"
 #include "raymath.h"
@@ -102,7 +102,7 @@ void addEnemy(Scene &scene)
     entity.add<Tag::Renderable>();
 }
 
-void onEnterMultiplier(Event::Enter event)
+void onEnterMultiplier(Event::Area::Enter event)
 {
     auto &entity = *event.entity;
     auto &area = *event.area;
@@ -117,7 +117,7 @@ void onEnterMultiplier(Event::Enter event)
     }
 }
 
-void onExitMultiplier(Event::Exit event)
+void onExitMultiplier(Event::Area::Exit event)
 {
     auto &entity = *event.entity;
     auto &area = *event.area;
@@ -143,8 +143,8 @@ int main()
         if (entity.template has<Component::Area>())
         {
             auto &area = entity.template get<Component::Area>();
-            area.dispatcher.template sink<Event::Enter>().template connect<&onEnterMultiplier>();
-            area.dispatcher.template sink<Event::Exit>().template connect<&onExitMultiplier>();
+            area.dispatcher.template sink<Event::Area::Enter>().template connect<&onEnterMultiplier>();
+            area.dispatcher.template sink<Event::Area::Exit>().template connect<&onExitMultiplier>();
         }
     });
 

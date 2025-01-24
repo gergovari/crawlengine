@@ -18,5 +18,3 @@
 #include "transform.hpp"
 
 #include "tag/renderable.hpp"
-
-struct Entity;

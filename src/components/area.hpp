@@ -1,3 +1,5 @@
+#pragma once
+
 #include "entity.hpp"
 #include <entt/entt.hpp>
 #include <raylib.h>
