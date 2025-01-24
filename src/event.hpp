@@ -1,7 +1,6 @@
 #pragma once
 
-#include "components.hpp"
-#include "entity.hpp"
+class Entity;
 
 namespace Event
 {

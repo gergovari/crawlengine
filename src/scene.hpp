@@ -1,15 +1,13 @@
 #pragma once
 
-#include "collidables.hpp"
-#include "components.hpp"
-#include "entity.hpp"
 #include "renderables.hpp"
-#include "spatial_hash_map.hpp"
-#include <entt/entt.hpp>
+#include "collidables.hpp"
+#include "entity.hpp"
 #include <forward_list>
 
-typedef std::function<void(Entity &)> EntityCallback;
 class SceneCallback;
+
+typedef std::function<void(Entity &)> EntityCallback;
 
 class Scene
 {

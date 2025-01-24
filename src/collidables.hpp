@@ -4,6 +4,7 @@
 
 class Scene;
 class Entity;
+class Rectangle;
 
 class Collidables : public SpacePartitioner<Entity *>
 {

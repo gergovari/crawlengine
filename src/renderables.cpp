@@ -1,7 +1,8 @@
-#include "renderables.hpp"
 
+#include "renderables.hpp"
 #include "entity.hpp"
 #include "scene.hpp"
+#include "components/components.hpp"
 #include "spatial_hash_map.hpp"
 
 #define SPATIAL_UNIT 50

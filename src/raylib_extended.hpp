@@ -1,10 +1,12 @@
 #pragma once
 
-#include "entity.hpp"
-#include "raylib.h"
-#include "renderables.hpp"
-#include "scene.hpp"
-#include <array>
+#include "components/components.hpp"
+
+class Entity;
+class Camera2D;
+class Rectangle;
+class Scene;
+class Renderables;
 
 bool IsRectValid(Rectangle rect);
 Rectangle GetCameraView(Camera2D &camera);

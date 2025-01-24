@@ -7,17 +7,12 @@
 
 #include <unordered_set>
 
+#include "camera.hpp"
+
 struct Entity;
 
 namespace Component
 {
-    struct Camera
-    {
-        Camera2D cam = {0};
-        Entity *target = nullptr;
-        Vector2 offset = {0};
-    };
-
     struct Transform
     {
         Vector2 pos = {0};

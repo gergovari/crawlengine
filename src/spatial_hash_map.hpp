@@ -1,11 +1,10 @@
 #pragma once
 
-#include <cmath>
 #include <forward_list>
 #include <functional>
 #include <unordered_map>
 
-#include "raylib.h"
+class Rectangle;
 
 typedef std::pair<int, int> SpatialPair;
 

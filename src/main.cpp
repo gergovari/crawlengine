@@ -3,7 +3,7 @@
 #include <entt/signal/dispatcher.hpp>
 #include <unordered_set>
 
-#include "components.hpp"
+#include "components/components.hpp"
 #include "entity.hpp"
 #include "event.hpp"
 #include "raylib.h"
