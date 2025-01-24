@@ -1,7 +1,6 @@
 
-class Camera2D;
-class Entity;
-class Vector2;
+#include "entity.hpp"
+#include <raylib.h>
 
 namespace Component
 {

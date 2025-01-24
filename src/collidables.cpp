@@ -1,9 +1,9 @@
 #include "collidables.hpp"
 
+#include "components/components.hpp"
 #include "entity.hpp"
 #include "scene.hpp"
 #include "spatial_hash_map.hpp"
-#include "components/components.hpp"
 
 #define SPATIAL_UNIT 50
 

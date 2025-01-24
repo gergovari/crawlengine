@@ -165,7 +165,7 @@ int main()
 
     addWorld(scene);
     addPlayer(scene);
-    // addEnemy(scene);
+    addEnemy(scene);
 
     while (!WindowShouldClose())
     {

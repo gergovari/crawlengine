@@ -7,81 +7,16 @@
 
 #include <unordered_set>
 
+#include "area.hpp"
 #include "camera.hpp"
+#include "collider.hpp"
+#include "colored_rect.hpp"
+#include "locomotion/multiplier.hpp"
+#include "locomotion/velocity.hpp"
+#include "steering/player.hpp"
+#include "steering/test.hpp"
+#include "transform.hpp"
+
+#include "tag/renderable.hpp"
 
 struct Entity;
-
-namespace Component
-{
-    struct Transform
-    {
-        Vector2 pos = {0};
-        operator Vector2() const
-        {
-            return pos;
-        }
-    };
-
-    struct ColoredRect
-    {
-        Color color = DARKPURPLE;
-        Vector2 size = {0};
-    };
-
-    namespace Locomotion
-    {
-        struct Velocity
-        {
-            Vector2 vel = {0};
-            float targetSpeed = 0;
-            float multiplier = 1;
-
-            void setVelocity(Vector2 v);
-        };
-
-        struct Multiplier
-        {
-            float multiplier = 0.5f;
-        };
-    }
-
-    struct Collider
-    {
-        Vector2 size = {0};
-    };
-
-    struct Area
-    {
-        size_t id = 0;
-        Vector2 size = {0};
-
-        std::vector<Entity *> current;
-        entt::dispatcher dispatcher{};
-    };
-
-    namespace Steering
-    {
-        struct Player
-        {
-            int dummy = 0;
-        };
-
-        struct Test
-        {
-            int speed = 0;
-        };
-    }
-
-}
-
-namespace Tag
-{
-    struct Renderable
-    {
-        int z = 0;
-
-        /* TODO: deprecate as soon as EnTT
-         * implements enabled/disabled components */
-        bool render = true;
-    };
-}
