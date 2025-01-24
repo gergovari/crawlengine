@@ -3,7 +3,6 @@
 #include "components/components.hpp"
 #include "entity.hpp"
 #include "scene.hpp"
-#include "spatial_hash_map.hpp"
 
 #define SPATIAL_UNIT 50
 
@@ -92,7 +91,7 @@ void Renderables::remove(RenderableItem<Entity *> item)
     items.remove(item);
 }
 
-SpatialCell<RenderableItem<Entity *>> Renderables::nearby(Rectangle rect)
+SpacePartitioners::SpatialCell<RenderableItem<Entity *>> Renderables::nearby(Rectangle rect)
 {
     return items.nearby(enlarge(rect));
 }
