@@ -1,6 +1,6 @@
 #include "components.hpp"
 
-namespace Component
+namespace Components
 {
     namespace Locomotion
     {

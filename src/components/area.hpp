@@ -4,7 +4,7 @@
 #include <entt/entt.hpp>
 #include <raylib.h>
 
-namespace Component
+namespace Components
 {
     struct Area
     {

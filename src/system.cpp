@@ -3,13 +3,13 @@
 #include "events/events.hpp"
 #include "raylib_extended.hpp"
 
-namespace System
+namespace Systems
 {
     void RenderToCameras::tick(Scene &scene)
     {
         auto &renderables = scene.renderables;
 
-        scene.each<Component::Camera>([&renderables](auto &comp) {
+        scene.each<Components::Camera>([&renderables](auto &comp) {
             auto &cam = comp.cam;
 
             BeginMode2D(cam);
@@ -20,7 +20,7 @@ namespace System
 
     void FollowCameraTargets::tick(Scene &scene)
     {
-        scene.each<Component::Camera>([](auto &comp) {
+        scene.each<Components::Camera>([](auto &comp) {
             auto &cam = comp.cam;
             auto *entityP = comp.target;
 
@@ -28,9 +28,9 @@ namespace System
             {
                 auto &entity = *entityP;
 
-                if (entity.template has<Component::Transform>())
+                if (entity.template has<Components::Transform>())
                 {
-                    cam.target = Vector2Add(entity.template get<Component::Transform>(), comp.offset);
+                    cam.target = Vector2Add(entity.template get<Components::Transform>(), comp.offset);
                 }
             }
         });
@@ -40,30 +40,30 @@ namespace System
     {
         void Velocity::tick(Scene &scene)
         {
-            scene.eachEntity<Component::Transform, Component::Locomotion::Velocity, Component::Collider>(
+            scene.eachEntity<Components::Transform, Components::Locomotion::Velocity, Components::Collider>(
                 [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
                     Rectangle collision;
 
                     if (Vector2LengthSqr(locomotion.vel) != 0)
                     {
-                        entity.template update<Component::Transform>([&locomotion](auto &transform) {
+                        entity.template update<Components::Transform>([&locomotion](auto &transform) {
                             transform.pos.x += locomotion.vel.x * locomotion.multiplier;
                         });
 
                         if (IsColliding(scene, TcToRect(transform, collider), collision))
                         {
-                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                            entity.template update<Components::Transform>([&collision, &locomotion](auto &transform) {
                                 transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
                             });
                         }
 
-                        entity.template update<Component::Transform>([&locomotion](auto &transform) {
+                        entity.template update<Components::Transform>([&locomotion](auto &transform) {
                             transform.pos.y += locomotion.vel.y * locomotion.multiplier;
                         });
 
                         if (IsColliding(scene, TcToRect(transform, collider), collision))
                         {
-                            entity.template update<Component::Transform>([&collision, &locomotion](auto &transform) {
+                            entity.template update<Components::Transform>([&collision, &locomotion](auto &transform) {
                                 transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
                             });
                         }
@@ -76,7 +76,7 @@ namespace System
     {
         void Test::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Test, Component::Locomotion::Velocity>(
+            scene.each<Components::Steering::Test, Components::Locomotion::Velocity>(
                 [](const auto &test, auto &locomotion) {
                     locomotion.targetSpeed = test.speed;
                     Vector2 in;
@@ -104,7 +104,7 @@ namespace System
 
         void Player::tick(Scene &scene)
         {
-            scene.each<Component::Steering::Player, Component::Locomotion::Velocity>(
+            scene.each<Components::Steering::Player, Components::Locomotion::Velocity>(
                 [](const auto &input, auto &locomotion) {
                     if (IsKeyDown(KEY_LEFT_SHIFT))
                     {
@@ -122,14 +122,14 @@ namespace System
         }
     }
 
-    const Rectangle Area::CreateSearchRect(const Component::Transform &transform, const Component::Area &area)
+    const Rectangle Area::CreateSearchRect(const Components::Transform &transform, const Components::Area &area)
     {
         return {transform.pos.x - area.size.x, transform.pos.y - area.size.y, area.size.x * 3, area.size.y * 3};
     }
 
     void Area::tick(Scene &scene)
     {
-        scene.eachId<Component::Area, Component::Transform>([this, &scene](auto id, auto &area, const auto &transform) {
+        scene.eachId<Components::Area, Components::Transform>([this, &scene](auto id, auto &area, const auto &transform) {
             auto entities = scene.colliders.nearby(CreateSearchRect(transform, area));
             auto &counters = areas[area.id];
             std::vector<Entity *> current;
@@ -138,11 +138,11 @@ namespace System
             {
                 auto &entity = *p;
 
-                if (entity.template has<Component::Transform, Component::Collider>())
+                if (entity.template has<Components::Transform, Components::Collider>())
                 {
                     const auto collision = GetCollisionRec(TaToRect(transform, area),
-                                                           TcToRect(entity.template get<Component::Transform>(),
-                                                                    entity.template get<Component::Collider>()));
+                                                           TcToRect(entity.template get<Components::Transform>(),
+                                                                    entity.template get<Components::Collider>()));
 
                     if (IsRectValid(collision))
                     {
@@ -154,7 +154,7 @@ namespace System
 
                             if (it == counters.end())
                             {
-                                area.dispatcher.template trigger(Event::Area::Enter{p, scene.get(id)});
+                                area.dispatcher.template trigger(Events::Area::Enter{p, scene.get(id)});
                                 counters.emplace_back(p, 1);
                             }
                             else
@@ -175,7 +175,7 @@ namespace System
                 {
                     if (--counted->count <= 0)
                     {
-                        area.dispatcher.template trigger(Event::Area::Exit{counted->entity, scene.get(id)});
+                        area.dispatcher.template trigger(Events::Area::Exit{counted->entity, scene.get(id)});
                         counted = counters.erase(counted);
                         continue;
                     }

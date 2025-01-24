@@ -8,23 +8,23 @@
 
 Collidables::Collidables(Scene *scene) : items(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT))
 {
-    scene->onConstruct<Component::Collider>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
+    scene->onConstruct<Components::Collider>([this](auto &entity) {
+        if (entity.template has<Components::Transform>())
         {
-            auto &transform = entity.template get<Component::Transform>();
-            auto &collider = entity.template get<Component::Collider>();
+            auto &transform = entity.template get<Components::Transform>();
+            auto &collider = entity.template get<Components::Collider>();
 
             items.insert(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
         }
     });
 
-    scene->onDestroy<Component::Collider>([this](auto &entity) { items.remove(&entity); });
+    scene->onDestroy<Components::Collider>([this](auto &entity) { items.remove(&entity); });
 
-    scene->onUpdate<Component::Transform>([this](auto &entity) {
-        if (entity.template has<Component::Collider>())
+    scene->onUpdate<Components::Transform>([this](auto &entity) {
+        if (entity.template has<Components::Collider>())
         {
-            auto &transform = entity.template get<Component::Transform>();
-            auto &collider = entity.template get<Component::Collider>();
+            auto &transform = entity.template get<Components::Transform>();
+            auto &collider = entity.template get<Components::Collider>();
 
             items.update(&entity, {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y});
         }

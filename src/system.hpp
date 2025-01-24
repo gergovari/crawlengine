@@ -11,7 +11,7 @@
 #define WALK_SPEED 120.0f
 #define SPRINT_SPEED WALK_SPEED * 2
 
-namespace System
+namespace Systems
 {
     class System
     {
@@ -67,7 +67,7 @@ namespace System
 
         std::unordered_map<size_t, std::vector<CountedArea>> areas;
 
-        const static Rectangle CreateSearchRect(const Component::Transform &transform, const Component::Area &area);
+        const static Rectangle CreateSearchRect(const Components::Transform &transform, const Components::Area &area);
 
       public:
         void tick(Scene &scene) override;

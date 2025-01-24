@@ -2,7 +2,7 @@
 
 #include <raylib.h>
 
-namespace Component
+namespace Components
 {
     namespace Locomotion
     {

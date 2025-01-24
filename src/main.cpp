@@ -37,25 +37,25 @@ void addWorld(Scene &scene)
             if (x == 0 || x == WORLD_WIDTH - 1 || y == 0 || y == WORLD_HEIGHT - 1 || (x == 5 && (y > 3 && y < 9)) ||
                 (x == 8 && (y > 3 && y < 9)))
             {
-                entity.add<Component::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
-                entity.add<Component::Collider>(Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Component::ColoredRect>(GRAY, Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Tag::Renderable>();
+                entity.add<Components::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
+                entity.add<Components::Collider>(Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Components::ColoredRect>(GRAY, Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Tags::Renderable>();
             }
             else if (x == 10)
             {
-                entity.add<Component::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
-                entity.add<Component::ColoredRect>(DARKBLUE, Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Tag::Renderable>(-9);
+                entity.add<Components::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
+                entity.add<Components::ColoredRect>(DARKBLUE, Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Tags::Renderable>(-9);
 
-                entity.add<Component::Area>((size_t)0, Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Component::Locomotion::Multiplier>();
+                entity.add<Components::Area>((size_t)0, Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Components::Locomotion::Multiplier>();
             }
             else
             {
-                entity.add<Component::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
-                entity.add<Component::ColoredRect>(DARKGRAY, Vector2{TILE_SIZE, TILE_SIZE});
-                entity.add<Tag::Renderable>(-10);
+                entity.add<Components::Transform>(Vector2{x * TILE_SIZE, y * TILE_SIZE});
+                entity.add<Components::ColoredRect>(DARKGRAY, Vector2{TILE_SIZE, TILE_SIZE});
+                entity.add<Tags::Renderable>(-10);
             }
         }
     }
@@ -65,16 +65,16 @@ void addPlayer(Scene &scene)
 {
     auto &entity = scene.add();
 
-    entity.add<Component::Transform>(Vector2{PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE});
-    entity.add<Component::Locomotion::Velocity>();
-    entity.add<Component::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
-    entity.add<Component::Steering::Player>();
+    entity.add<Components::Transform>(Vector2{PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE});
+    entity.add<Components::Locomotion::Velocity>();
+    entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
+    entity.add<Components::Steering::Player>();
 
-    entity.add<Component::ColoredRect>(GREEN, Vector2{PLAYER_SIZE, PLAYER_SIZE});
-    entity.add<Tag::Renderable>();
+    entity.add<Components::ColoredRect>(GREEN, Vector2{PLAYER_SIZE, PLAYER_SIZE});
+    entity.add<Tags::Renderable>();
 
-    entity.add<Component::Camera>();
-    Component::Camera &comp = entity.get<Component::Camera>();
+    entity.add<Components::Camera>();
+    Components::Camera &comp = entity.get<Components::Camera>();
     Camera2D *cam = &comp.cam;
 
     comp.target = &entity;
@@ -90,45 +90,43 @@ void addEnemy(Scene &scene)
 {
     auto &entity = scene.add();
 
-    entity.add<Component::Transform>(Vector2{3 * TILE_SIZE, 4 * TILE_SIZE});
-    entity.add<Component::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
+    entity.add<Components::Transform>(Vector2{3 * TILE_SIZE, 4 * TILE_SIZE});
+    entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
 
-    entity.add<Component::Locomotion::Velocity>();
+    entity.add<Components::Locomotion::Velocity>();
 
-    entity.add<Component::Steering::Test>();
-    entity.get<Component::Steering::Test>().speed = WALK_SPEED;
+    entity.add<Components::Steering::Test>();
+    entity.get<Components::Steering::Test>().speed = WALK_SPEED;
 
-    entity.add<Component::ColoredRect>(RED, Vector2{PLAYER_SIZE, PLAYER_SIZE});
-    entity.add<Tag::Renderable>();
+    entity.add<Components::ColoredRect>(RED, Vector2{PLAYER_SIZE, PLAYER_SIZE});
+    entity.add<Tags::Renderable>();
 }
 
-void onEnterMultiplier(Event::Area::Enter event)
+void onEnterMultiplier(Events::Area::Enter event)
 {
     auto &entity = *event.entity;
     auto &area = *event.area;
 
-    if (entity.has<Component::Locomotion::Velocity>() && area.has<Component::Locomotion::Multiplier>())
+    if (entity.has<Components::Locomotion::Velocity>() && area.has<Components::Locomotion::Multiplier>())
     {
-        auto &locomotion = entity.get<Component::Locomotion::Velocity>();
-        auto &mult = area.get<Component::Locomotion::Multiplier>();
+        auto &locomotion = entity.get<Components::Locomotion::Velocity>();
+        auto &mult = area.get<Components::Locomotion::Multiplier>();
 
         locomotion.multiplier *= mult.multiplier;
-        // printf("%f\n", locomotion.multiplier);
     }
 }
 
-void onExitMultiplier(Event::Area::Exit event)
+void onExitMultiplier(Events::Area::Exit event)
 {
     auto &entity = *event.entity;
     auto &area = *event.area;
 
-    if (entity.has<Component::Locomotion::Velocity>() && area.has<Component::Locomotion::Multiplier>())
+    if (entity.has<Components::Locomotion::Velocity>() && area.has<Components::Locomotion::Multiplier>())
     {
-        auto &locomotion = entity.get<Component::Locomotion::Velocity>();
-        auto &mult = area.get<Component::Locomotion::Multiplier>();
+        auto &locomotion = entity.get<Components::Locomotion::Velocity>();
+        auto &mult = area.get<Components::Locomotion::Multiplier>();
 
         locomotion.multiplier /= mult.multiplier;
-        // printf("%f\n", locomotion.multiplier);
     }
 }
 
@@ -139,18 +137,18 @@ int main()
 
     Scene scene;
 
-    scene.onConstruct<Component::Locomotion::Multiplier>([](auto &entity) {
-        if (entity.template has<Component::Area>())
+    scene.onConstruct<Components::Locomotion::Multiplier>([](auto &entity) {
+        if (entity.template has<Components::Area>())
         {
-            auto &area = entity.template get<Component::Area>();
-            area.dispatcher.template sink<Event::Area::Enter>().template connect<&onEnterMultiplier>();
-            area.dispatcher.template sink<Event::Area::Exit>().template connect<&onExitMultiplier>();
+            auto &area = entity.template get<Components::Area>();
+            area.dispatcher.template sink<Events::Area::Enter>().template connect<&onEnterMultiplier>();
+            area.dispatcher.template sink<Events::Area::Exit>().template connect<&onExitMultiplier>();
         }
     });
 
-    std::vector<std::unique_ptr<System::System>> systems;
+    std::vector<std::unique_ptr<Systems::System>> systems;
     {
-        using namespace System;
+        using namespace Systems;
 
         systems.push_back(std::make_unique<Steering::Player>());
         systems.push_back(std::make_unique<Steering::Test>());

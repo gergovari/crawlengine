@@ -2,7 +2,7 @@
 
 class Entity;
 
-namespace Event
+namespace Events
 {
     namespace Area
     {

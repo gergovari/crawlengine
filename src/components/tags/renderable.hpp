@@ -1,4 +1,4 @@
-namespace Tag
+namespace Tags
 {
     struct Renderable
     {

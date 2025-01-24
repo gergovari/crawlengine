@@ -13,30 +13,30 @@ const RenderableItem<Entity *> Renderables::eToRI(Entity &entity, int z)
 
 const RenderableItem<Entity *> Renderables::eToRI(Entity &entity)
 {
-    return eToRI(entity, entity.get<Tag::Renderable>().z);
+    return eToRI(entity, entity.get<Tags::Renderable>().z);
 }
 
 Renderables::Renderables(Scene *scene) : items(std::make_pair(SPATIAL_UNIT, SPATIAL_UNIT))
 {
-    scene->onConstruct<Tag::Renderable>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
+    scene->onConstruct<Tags::Renderable>([this](auto &entity) {
+        if (entity.template has<Components::Transform>())
         {
-            auto &transform = entity.template get<Component::Transform>();
+            auto &transform = entity.template get<Components::Transform>();
 
-            if (entity.template has<Component::ColoredRect>())
+            if (entity.template has<Components::ColoredRect>())
             {
-                auto &coloredRect = entity.template get<Component::ColoredRect>();
+                auto &coloredRect = entity.template get<Components::ColoredRect>();
                 items.insert(eToRI(entity), {transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
             }
         }
     });
 
-    scene->onUpdate<Tag::Renderable>([this](auto &entity) {
-        if (entity.template has<Component::Transform>())
+    scene->onUpdate<Tags::Renderable>([this](auto &entity) {
+        if (entity.template has<Components::Transform>())
         {
-            auto &transform = entity.template get<Component::Transform>();
+            auto &transform = entity.template get<Components::Transform>();
 
-            if (entity.template has<Component::ColoredRect>())
+            if (entity.template has<Components::ColoredRect>())
             {
                 const auto renderable = eToRI(entity);
                 items.replace(renderable, renderable);
@@ -44,16 +44,16 @@ Renderables::Renderables(Scene *scene) : items(std::make_pair(SPATIAL_UNIT, SPAT
         }
     });
 
-    scene->onDestroy<Tag::Renderable>([this](auto &entity) { items.remove(eToRI(entity)); });
+    scene->onDestroy<Tags::Renderable>([this](auto &entity) { items.remove(eToRI(entity)); });
 
-    scene->onUpdate<Component::Transform>([this](auto &entity) {
-        auto &transform = entity.template get<Component::Transform>();
+    scene->onUpdate<Components::Transform>([this](auto &entity) {
+        auto &transform = entity.template get<Components::Transform>();
 
-        if (entity.template has<Tag::Renderable>())
+        if (entity.template has<Tags::Renderable>())
         {
-            if (entity.template has<Component::ColoredRect>())
+            if (entity.template has<Components::ColoredRect>())
             {
-                auto &coloredRect = entity.template get<Component::ColoredRect>();
+                auto &coloredRect = entity.template get<Components::ColoredRect>();
                 items.update(eToRI(entity),
                              Rectangle{transform.pos.x, transform.pos.y, coloredRect.size.x, coloredRect.size.y});
             }

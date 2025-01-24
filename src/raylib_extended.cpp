@@ -32,11 +32,11 @@ void DrawRenderables(Camera2D &cam, Renderables &renderables)
     for (auto &renderable : items)
     {
         Entity &entity = *renderable.item;
-        auto &transform = entity.get<Component::Transform>();
+        auto &transform = entity.get<Components::Transform>();
 
-        if (entity.has<Component::ColoredRect>())
+        if (entity.has<Components::ColoredRect>())
         {
-            auto &rect = entity.get<Component::ColoredRect>();
+            auto &rect = entity.get<Components::ColoredRect>();
 
             DrawRectangleV(transform.pos, rect.size, rect.color);
         }
@@ -64,8 +64,8 @@ std::array<Rectangle, 8> NeighbouringColliders(Scene &scene, Rectangle collider)
     {
         if (entity)
         {
-            auto &tilePos = entity->get<Component::Transform>();
-            auto &collider = entity->get<Component::Collider>();
+            auto &tilePos = entity->get<Components::Transform>();
+            auto &collider = entity->get<Components::Collider>();
 
             for (const auto &offset : offsets)
             {
@@ -100,12 +100,12 @@ bool IsColliding(Scene &scene, Rectangle collider, Rectangle &result)
     return false;
 }
 
-Rectangle TcToRect(const Component::Transform &transform, const Component::Collider &collider)
+Rectangle TcToRect(const Components::Transform &transform, const Components::Collider &collider)
 {
     return {transform.pos.x, transform.pos.y, collider.size.x, collider.size.y};
 }
 
-Rectangle TaToRect(const Component::Transform &transform, const Component::Area &area)
+Rectangle TaToRect(const Components::Transform &transform, const Components::Area &area)
 {
     return {transform.pos.x, transform.pos.y, area.size.x, area.size.y};
 }
