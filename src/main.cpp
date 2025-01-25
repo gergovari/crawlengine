@@ -108,12 +108,6 @@ int main()
 
     Scene scene;
 
-    std::vector<std::unique_ptr<Systems::System>> startup;
-    {
-        using namespace Systems;
-        
-    }
-
     std::vector<std::unique_ptr<Systems::System>> systems;
     {
         using namespace Systems;
