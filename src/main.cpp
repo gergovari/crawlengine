@@ -101,34 +101,6 @@ void addEnemy(Scene &scene)
     entity.add<Tags::Renderable>();
 }
 
-void onEnterMultiplier(Events::Area::Enter event)
-{
-    auto &entity = *event.entity;
-    auto &area = *event.area;
-
-    if (entity.has<Components::Locomotion::Velocity>() && area.has<Components::Locomotion::Multiplier>())
-    {
-        auto &locomotion = entity.get<Components::Locomotion::Velocity>();
-        auto &mult = area.get<Components::Locomotion::Multiplier>();
-
-        locomotion.multiplier *= mult.multiplier;
-    }
-}
-
-void onExitMultiplier(Events::Area::Exit event)
-{
-    auto &entity = *event.entity;
-    auto &area = *event.area;
-
-    if (entity.has<Components::Locomotion::Velocity>() && area.has<Components::Locomotion::Multiplier>())
-    {
-        auto &locomotion = entity.get<Components::Locomotion::Velocity>();
-        auto &mult = area.get<Components::Locomotion::Multiplier>();
-
-        locomotion.multiplier /= mult.multiplier;
-    }
-}
-
 int main()
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
@@ -136,14 +108,11 @@ int main()
 
     Scene scene;
 
-    scene.onConstruct<Components::Locomotion::Multiplier>([](auto &entity) {
-        if (entity.template has<Components::Area>())
-        {
-            auto &area = entity.template get<Components::Area>();
-            area.dispatcher.template sink<Events::Area::Enter>().template connect<&onEnterMultiplier>();
-            area.dispatcher.template sink<Events::Area::Exit>().template connect<&onExitMultiplier>();
-        }
-    });
+    std::vector<std::unique_ptr<Systems::System>> startup;
+    {
+        using namespace Systems;
+        
+    }
 
     std::vector<std::unique_ptr<Systems::System>> systems;
     {
@@ -153,6 +122,7 @@ int main()
         systems.push_back(std::make_unique<Steering::Test>());
 
         systems.push_back(std::make_unique<Locomotion::Velocity>());
+        startup.push_back(std::make_unique<Locomotion::Multiplier>(scene));
 
         systems.push_back(std::make_unique<Area>());
 
@@ -163,7 +133,7 @@ int main()
     addWorld(scene);
     addPlayer(scene);
     addEnemy(scene);
-
+    
     while (!WindowShouldClose())
     {
         BeginDrawing();
