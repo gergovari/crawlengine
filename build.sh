@@ -1,1 +1,1 @@
-cmake -S . -B build && cmake --build build && ./build/crawlstart
+cmake -S . -B build && cmake --build build && ./build/crawlengine

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(crawlstart CXX)
+project(crawlengine CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,10 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
-#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
@@ -20,10 +16,18 @@ set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example g
 FetchContent_Declare(
     raylib
     GIT_REPOSITORY "https://github.com/raysan5/raylib.git"
-    GIT_TAG "master"
+    GIT_TAG "5.5"
     GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(raylib)
+
+FetchContent_Declare(
+    raylib-cpp
+    GIT_REPOSITORY "https://github.com/RobLoach/raylib-cpp"
+    GIT_TAG "v5.5.0"
+    GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(raylib-cpp)
 
 FetchContent_Declare(
     entt
@@ -41,6 +45,7 @@ target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE})
 target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="./assets/")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${entt_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${raylib-cpp_SOURCE_DIR}/include)

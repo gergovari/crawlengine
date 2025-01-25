@@ -116,7 +116,7 @@ int main()
         systems.push_back(std::make_unique<Steering::Test>());
 
         systems.push_back(std::make_unique<Locomotion::Velocity>());
-        startup.push_back(std::make_unique<Locomotion::Multiplier>(scene));
+        systems.push_back(std::make_unique<Locomotion::Multiplier>(scene));
 
         systems.push_back(std::make_unique<Area>());
 
