@@ -8,17 +8,17 @@ class Rectangle;
 
 class Collidables : public SpacePartitioners::SpacePartitioner<Entity *>
 {
-    private:
-        SpacePartitioners::SpatialHashMap<Entity *> items;
+  private:
+    SpacePartitioners::SpatialHashMap<Entity *> items;
 
-        Rectangle enlarge(Rectangle rect);
+    Rectangle enlarge(Rectangle rect);
 
-    public:
-        Collidables(Scene *scene);
+  public:
+    Collidables(Scene *scene);
 
-        void insert(Entity *item, Rectangle rect) override;
-        void update(Entity *item, Rectangle rect) override;
-        void replace(Entity *item, Entity *t) override;
-        void remove(Entity *item) override;
-        SpacePartitioners::SpatialCell<Entity *> nearby(Rectangle rect) override;
+    void insert(Entity *item, Rectangle rect) override;
+    void update(Entity *item, Rectangle rect) override;
+    void replace(Entity *item, Entity *t) override;
+    void remove(Entity *item) override;
+    SpacePartitioners::SpatialCell<Entity *> nearby(Rectangle rect) override;
 };

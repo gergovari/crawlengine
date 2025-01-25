@@ -1,14 +1,15 @@
 #pragma once
 
-#include "systems/system.hpp"
 #include "components/components.hpp"
+#include "systems/system.hpp"
 #include <unordered_map>
 #include <vector>
 
 class Entity;
 class Rectangle;
 
-namespace Systems {
+namespace Systems
+{
     class Area : public System
     {
       private:

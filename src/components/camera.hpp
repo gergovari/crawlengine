@@ -1,14 +1,14 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include <raylib.h>
+#include <raylib-cpp.hpp>
 
 namespace Components
 {
     struct Camera
     {
-        Camera2D cam = {0};
+        raylib::Camera2D cam;
         Entity *target = nullptr;
-        Vector2 offset = {0};
+        raylib::Vector2 offset = {0};
     };
 }

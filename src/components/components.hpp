@@ -2,8 +2,8 @@
 
 #include <entt/entt.hpp>
 
-#include "raylib.h"
 #include "raymath.h"
+#include <raylib-cpp.hpp>
 
 #include <unordered_set>
 

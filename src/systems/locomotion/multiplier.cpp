@@ -1,11 +1,13 @@
 #include "systems/locomotion/multiplier.hpp"
 
 #include "components/components.hpp"
-#include "scene/scene.hpp"
 #include "events/events.hpp"
+#include "scene/scene.hpp"
 
-namespace Systems {
-    namespace Locomotion {
+namespace Systems
+{
+    namespace Locomotion
+    {
         void Multiplier::OnEnter(Events::Area::Enter event)
         {
             auto &entity = *event.entity;
@@ -34,7 +36,8 @@ namespace Systems {
             }
         }
 
-        Multiplier::Multiplier(Scene &scene) {
+        Multiplier::Multiplier(Scene &scene)
+        {
             scene.onConstruct<Components::Locomotion::Multiplier>([](auto &entity) {
                 if (entity.template has<Components::Area>())
                 {

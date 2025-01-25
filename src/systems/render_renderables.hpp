@@ -2,8 +2,9 @@
 
 #include "systems/system.hpp"
 
-namespace Systems {
-    class RenderToCameras : public System
+namespace Systems
+{
+    class RenderRenderables : public System
     {
       public:
         void tick(Scene &scene) override;

@@ -2,7 +2,8 @@
 
 #include "systems/system.hpp"
 
-namespace Systems {
+namespace Systems
+{
     namespace Locomotion
     {
         class Velocity : public System

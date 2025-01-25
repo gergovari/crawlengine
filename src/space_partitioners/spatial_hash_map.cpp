@@ -1,6 +1,7 @@
 #include "spatial_hash_map.hpp"
 
-namespace SpacePartitioners {
+namespace SpacePartitioners
+{
     std::size_t SpatialPairHash::operator()(const SpatialPair &pair) const
     {
         size_t lhs = pair.first;

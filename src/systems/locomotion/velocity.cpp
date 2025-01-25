@@ -1,10 +1,11 @@
 #include "systems/locomotion/velocity.hpp"
 
+#include "entity/entity.hpp"
 #include "misc/raylib_extended.hpp"
 #include "scene/scene.hpp"
-#include "entity/entity.hpp"
 
-namespace Systems {
+namespace Systems
+{
     namespace Locomotion
     {
         void Velocity::tick(Scene &scene)

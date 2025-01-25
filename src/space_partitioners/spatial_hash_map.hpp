@@ -6,7 +6,8 @@
 
 class Rectangle;
 
-namespace SpacePartitioners {
+namespace SpacePartitioners
+{
     typedef std::pair<int, int> SpatialPair;
 
     struct SpatialPairHash

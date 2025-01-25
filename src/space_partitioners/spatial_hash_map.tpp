@@ -1,18 +1,20 @@
 #pragma once
 
-#include "raylib.h"
 #include <cmath>
+#include <raylib-cpp.hpp>
 
 #include "spatial_hash_map.hpp"
 
-namespace SpacePartitioners {
+namespace SpacePartitioners
+{
     template <typename T> SpatialHashMap<T>::SpatialHashMap(SpatialPair u) : unit(u)
     {
     }
 
     template <typename T> void SpatialHashMap<T>::forEach(std::function<bool(SpatialCell<T> &)> func, Rectangle rect)
     {
-        auto steps = std::make_pair((int)std::floor(rect.width / unit.first), (int)std::floor(rect.height / unit.second));
+        auto steps =
+            std::make_pair((int)std::floor(rect.width / unit.first), (int)std::floor(rect.height / unit.second));
         auto base = std::make_pair((int)std::floor(rect.x / unit.first), (int)std::floor(rect.y / unit.second));
 
         for (int i = 0; i < steps.first; i++)

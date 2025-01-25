@@ -1,7 +1,7 @@
 #include "systems/steering/test.hpp"
 
-#include "scene/scene.hpp"
 #include "components/components.hpp"
+#include "scene/scene.hpp"
 
 namespace Systems
 {

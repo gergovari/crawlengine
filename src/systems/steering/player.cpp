@@ -1,10 +1,12 @@
 #include "systems/steering/player.hpp"
 
-#include "scene/scene.hpp"
 #include "components/components.hpp"
+#include "scene/scene.hpp"
 
-namespace Systems {
-    namespace Steering {
+namespace Systems
+{
+    namespace Steering
+    {
         void Player::tick(Scene &scene)
         {
             scene.each<Components::Steering::Player, Components::Locomotion::Velocity>(

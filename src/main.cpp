@@ -1,21 +1,20 @@
 #include <cstdio>
-#include <entt/entity/registry.hpp>
-#include <entt/signal/dispatcher.hpp>
 #include <unordered_set>
 
-#include "components/components.hpp"
-#include "entity/entity.hpp"
-#include "events/events.hpp"
-#include "raymath.h"
+#include <entt/entity/registry.hpp>
+#include <entt/signal/dispatcher.hpp>
+
 #include "misc/raylib_extended.hpp"
-#include "scene/renderables.hpp"
-#include "scene/scene.hpp"
+
+#include "components/components.hpp"
+#include "services/services.hpp"
 #include "systems/systems.hpp"
 
-#define WINDOW_TITLE "CRAWLengine"
+#include "events/events.hpp"
 
-#define SCREEN_WIDTH (1280)
-#define SCREEN_HEIGHT (720)
+#include "entity/entity.hpp"
+#include "scene/renderables.hpp"
+#include "scene/scene.hpp"
 
 #define WORLD_WIDTH 100
 #define WORLD_HEIGHT 100
@@ -77,7 +76,7 @@ void addPlayer(Scene &scene)
     Camera2D *cam = &comp.cam;
 
     comp.target = &entity;
-    comp.offset = {PLAYER_SIZE / 2, PLAYER_SIZE / 2};
+    comp.offset = raylib::Vector2(PLAYER_SIZE / 2, PLAYER_SIZE / 2);
 
     cam->target = {0, 0};
     cam->offset = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
@@ -101,48 +100,46 @@ void addEnemy(Scene &scene)
     entity.add<Tags::Renderable>();
 }
 
-int main()
+static std::vector<std::unique_ptr<Systems::System>> SetupSystems(Scene &scene)
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-    SetTargetFPS(60);
-
-    Scene scene;
+    using namespace Systems;
 
     std::vector<std::unique_ptr<Systems::System>> systems;
-    {
-        using namespace Systems;
 
-        systems.push_back(std::make_unique<Steering::Player>());
-        systems.push_back(std::make_unique<Steering::Test>());
+    systems.push_back(std::make_unique<Steering::Player>());
+    systems.push_back(std::make_unique<Steering::Test>());
 
-        systems.push_back(std::make_unique<Locomotion::Velocity>());
-        systems.push_back(std::make_unique<Locomotion::Multiplier>(scene));
+    systems.push_back(std::make_unique<Locomotion::Velocity>());
+    systems.push_back(std::make_unique<Locomotion::Multiplier>(scene));
 
-        systems.push_back(std::make_unique<Area>());
+    systems.push_back(std::make_unique<Area>());
 
-        systems.push_back(std::make_unique<FollowCameraTargets>());
-        systems.push_back(std::make_unique<RenderToCameras>());
-    }
+    systems.push_back(std::make_unique<FollowCameraTargets>());
+
+    systems.push_back(std::make_unique<RenderRenderables>());
+
+    entt::locator<Services::Renderers::Renderer>::emplace<Services::Renderers::Raylib>(1280, 720);
+    systems.push_back(std::make_unique<ServiceWrapper<Services::Renderers::Renderer>>());
+
+    return systems;
+}
+
+int main()
+{
+    Scene scene;
+    auto systems = SetupSystems(scene);
 
     addWorld(scene);
     addPlayer(scene);
     addEnemy(scene);
-    
+
     while (!WindowShouldClose())
     {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-
         for (auto &system : systems)
         {
             system->tick(scene);
         }
-
-        DrawFPS(0, 0);
-
-        EndDrawing();
     }
 
-    CloseWindow();
     return 0;
 }

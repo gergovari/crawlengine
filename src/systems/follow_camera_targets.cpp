@@ -3,7 +3,8 @@
 #include "components/components.hpp"
 #include "scene/scene.hpp"
 
-namespace Systems {
+namespace Systems
+{
     void FollowCameraTargets::tick(Scene &scene)
     {
         scene.each<Components::Camera>([](auto &comp) {

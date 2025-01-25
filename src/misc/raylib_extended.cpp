@@ -22,27 +22,6 @@ Rectangle GetCameraView(Camera2D &camera)
     return view;
 }
 
-void DrawRenderables(Camera2D &cam, Renderables &renderables)
-{
-    auto view = GetCameraView(cam);
-    auto items = renderables.nearby(view);
-
-    items.sort([](auto const &a, auto const &b) { return a.z < b.z; });
-
-    for (auto &renderable : items)
-    {
-        Entity &entity = *renderable.item;
-        auto &transform = entity.get<Components::Transform>();
-
-        if (entity.has<Components::ColoredRect>())
-        {
-            auto &rect = entity.get<Components::ColoredRect>();
-
-            DrawRectangleV(transform.pos, rect.size, rect.color);
-        }
-    }
-}
-
 std::array<Rectangle, 8> NeighbouringColliders(Scene &scene, Rectangle collider)
 {
     const Vector2 transform = {collider.x + collider.width / 2, collider.y + collider.height / 2};
