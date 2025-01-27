@@ -106,6 +106,9 @@ static std::vector<std::unique_ptr<Systems::System>> SetupSystems(Scene &scene)
 
     std::vector<std::unique_ptr<Systems::System>> systems;
 
+    entt::locator<Services::Inputs::Input>::emplace<Services::Inputs::Raylib>();
+    systems.push_back(std::make_unique<ServiceWrapper<Services::Inputs::Input>>());
+
     systems.push_back(std::make_unique<Steering::Player>());
     systems.push_back(std::make_unique<Steering::Test>());
 
