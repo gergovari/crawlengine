@@ -16,6 +16,50 @@
 #include "scene/renderables.hpp"
 #include "scene/scene.hpp"
 
+/* TODO
+ *
+ * locomotion steering overhaul
+ * steering behaviours
+ *
+ * resources system
+ * sprint with stamina
+ *
+ * ai behaviours
+ * fsm
+ *
+ * enemy attack player
+ * allow player to hit back
+ *
+ * sustained effects
+ * traps
+ *
+ * replace ColoredRects with sprites
+ * Tiled maps
+ *
+ * ui
+ * inventory system
+ * equipment system
+ * equipment effects 
+ * 
+ * audio
+ *
+ * travel between maps
+ *
+ * utility ai
+ * dialog system
+ * LLM
+ * levels of sim
+ *
+ * migrate to raylib-cpp
+ *
+ * Scene combine .each
+ *
+ * shaders
+ * post-processing
+ *
+ * SD
+ */
+
 #define WORLD_WIDTH 100
 #define WORLD_HEIGHT 100
 #define TILE_SIZE 60.0f
