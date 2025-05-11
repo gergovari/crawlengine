@@ -6,7 +6,7 @@ namespace Components
     {
         struct Test
         {
-            int speed = 0;
+            int dummy = 0;
         };
     }
 

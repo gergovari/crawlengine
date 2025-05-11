@@ -19,10 +19,15 @@ namespace Systems
 					[&input](auto &entity, const auto &steering, auto &heading) {
 					using namespace Services::Inputs;
 
-					entity.template update<Components::Locomotion::Heading>([&input](auto &heading) {
+					const auto baseVelocity = 100;
+					auto dirScale = input.isDown(MOVE_SPRINT) ? 1 : 0.5;
+					auto maxVelocityScale = input.isDown(MOVE_SPRINT) ? 1 : .5;
+
+					entity.template update<Components::Locomotion::Heading>([&dirScale, &maxVelocityScale, &input](auto &heading) {
 						heading.dir = raylib::Vector2((float)(input.isDown(MOVE_RIGHT) - input.isDown(MOVE_LEFT)),
-								(float)(input.isDown(MOVE_DOWN) - input.isDown(MOVE_UP)));
+								(float)(input.isDown(MOVE_DOWN) - input.isDown(MOVE_UP))).Scale(dirScale);
 						});
+						heading.maxVelocityScale = maxVelocityScale;
 					});
 
 		}

@@ -9,6 +9,8 @@ namespace Components
 		struct Heading
 		{
 			raylib::Vector2 dir;
+
+			float maxVelocityScale = 1;
 		};
 	}
 }

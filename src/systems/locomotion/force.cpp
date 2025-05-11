@@ -28,9 +28,11 @@ namespace Systems
 					auto force = inForce - friction;
 
 					auto accel = force.Scale(1/locomotion.mass);
-					entity.template update<Components::Locomotion::Force>([&delta, &accel](auto &locomotion) {
+					entity.template update<Components::Locomotion::Force>([&delta, &heading, &accel](auto &locomotion) {
 						locomotion.vel += accel.Scale(delta);
-						locomotion.vel = locomotion.vel.Clamp(-locomotion.maxVelocity, locomotion.maxVelocity);
+						locomotion.vel = locomotion.vel.Clamp(
+								-locomotion.maxVelocity * heading.maxVelocityScale, 
+								locomotion.maxVelocity * heading.maxVelocityScale);
 					});
 					auto vel = locomotion.vel;
 					

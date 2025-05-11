@@ -165,7 +165,6 @@ void addEnemy(Scene &scene)
     entity.add<Components::Locomotion::Heading>();
 
     entity.add<Components::Steering::Test>();
-    entity.get<Components::Steering::Test>().speed = WALK_SPEED;
 
     entity.add<Components::ColoredRect>(RED, Vector2{PLAYER_SIZE, PLAYER_SIZE});
     entity.add<Tags::Renderable>();
