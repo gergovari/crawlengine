@@ -14,14 +14,17 @@ namespace Systems
 				[&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &heading, const auto &collider) {
 					Rectangle collision;
 					auto delta = GetFrameTime();
+					auto gravityAccel = 9.81;
+					auto frictionCoeff = .1;
 
-					if (heading.dir.LengthSqr() != 0)
-					{	
-						auto accel = heading.dir.Scale(locomotion.max).Scale(1/locomotion.mass);
-						entity.template update<Components::Locomotion::Force>([&delta, &accel](auto &locomotion) {
-							locomotion.vel += accel.Scale(delta);
-						});
-					}
+					auto inForce = heading.dir.Scale(locomotion.max);
+					auto friction = locomotion.vel.Normalize().Scale(frictionCoeff * locomotion.mass * gravityAccel);
+					auto force = inForce - friction;
+
+					auto accel = force.Scale(1/locomotion.mass);
+					entity.template update<Components::Locomotion::Force>([&delta, &accel](auto &locomotion) {
+						locomotion.vel += accel.Scale(delta);
+					});
 					auto vel = locomotion.vel;
 
 					entity.template update<Components::Transform>([&delta, &vel, &locomotion](auto &transform) {

@@ -8,8 +8,8 @@ namespace Components
 	{
 		struct Force
 		{
-			float max = 100;
-			float mass = 1;
+			float max = 1300;
+			float mass = 90;
 
 			raylib::Vector2 vel;
 		};
