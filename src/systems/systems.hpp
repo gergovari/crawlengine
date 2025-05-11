@@ -8,6 +8,7 @@
 
 #include "systems/locomotion/multiplier.hpp"
 #include "systems/locomotion/velocity.hpp"
+#include "systems/locomotion/force.hpp"
 
 #include "systems/steering/player.hpp"
 #include "systems/steering/test.hpp"

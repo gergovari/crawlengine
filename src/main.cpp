@@ -108,7 +108,7 @@ void addPlayer(Scene &scene)
     auto &entity = scene.add();
 
     entity.add<Components::Transform>(Vector2{PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE});
-    entity.add<Components::Locomotion::Velocity>();
+    entity.add<Components::Locomotion::Force>();
     entity.add<Components::Locomotion::Heading>();
     entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
     entity.add<Components::Steering::Player>();
@@ -136,7 +136,7 @@ void addEnemy(Scene &scene)
     entity.add<Components::Transform>(Vector2{3 * TILE_SIZE, 4 * TILE_SIZE});
     entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
 
-    entity.add<Components::Locomotion::Velocity>();
+    entity.add<Components::Locomotion::Force>();
     entity.add<Components::Locomotion::Heading>();
 
     entity.add<Components::Steering::Test>();
@@ -158,7 +158,7 @@ static std::vector<std::unique_ptr<Systems::System>> SetupSystems(Scene &scene)
     systems.push_back(std::make_unique<Steering::Player>());
     systems.push_back(std::make_unique<Steering::Test>());
 
-    systems.push_back(std::make_unique<Locomotion::Velocity>());
+    systems.push_back(std::make_unique<Locomotion::Force>());
     systems.push_back(std::make_unique<Locomotion::Multiplier>(scene));
 
     systems.push_back(std::make_unique<Area>());
