@@ -6,15 +6,9 @@ namespace AI {
 	namespace Steering {
 		class Behavior {
 			public:
-				virtual raylib::Vector2 calculate(raylib::Vector2 pos, raylib::Vector2 vel) = 0;
-		};
-
-		class Seek : public Behavior {
-			public:
-				raylib::Vector2 target;
-
-				Seek(raylib::Vector2 t) : target(t) {};
-				raylib::Vector2 calculate(raylib::Vector2 pos, raylib::Vector2 vel);
+				static raylib::Vector2 seek(raylib::Vector2 pos, raylib::Vector2 target, float radius = 0);
+				static raylib::Vector2 flee(raylib::Vector2 pos, raylib::Vector2 target, float radius = 0);
+				static raylib::Vector2 arrive(raylib::Vector2 pos, raylib::Vector2 target);
 		};
 	}
 }

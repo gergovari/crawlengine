@@ -33,33 +33,35 @@ namespace Systems
 						locomotion.vel = locomotion.vel.Clamp(-locomotion.maxVelocity, locomotion.maxVelocity);
 					});
 					auto vel = locomotion.vel;
-
-					entity.template update<Components::Transform>([&delta, &vel, &locomotion](auto &transform) {
-							transform.pos.x += vel.x * delta;
-					});
-
-					if (IsColliding(scene, TcToRect(transform, collider), collision))
-					{
-						entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
-								transform.pos.x -= collision.width * ((vel.x > 0) - (vel.x < 0));
+					
+					if (vel.Length() > 15) {
+						entity.template update<Components::Transform>([&delta, &vel, &locomotion](auto &transform) {
+								transform.pos.x += vel.x * delta;
 						});
-						entity.template update<Components::Locomotion::Force>([](auto &locomotion) {
-							locomotion.vel.x = 0;
-						});
-					}
 
-					entity.template update<Components::Transform>([&delta, &vel, &locomotion](auto &transform) {
-							transform.pos.y += vel.y * delta;
-					});
+						if (IsColliding(scene, TcToRect(transform, collider), collision))
+						{
+							entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
+									transform.pos.x -= collision.width * ((vel.x > 0) - (vel.x < 0));
+							});
+							entity.template update<Components::Locomotion::Force>([](auto &locomotion) {
+								locomotion.vel.x = 0;
+							});
+						}
 
-					if (IsColliding(scene, TcToRect(transform, collider), collision))
-					{
-						entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
-								transform.pos.y -= collision.height * ((vel.y > 0) - (vel.y < 0));
+						entity.template update<Components::Transform>([&delta, &vel, &locomotion](auto &transform) {
+								transform.pos.y += vel.y * delta;
 						});
-						entity.template update<Components::Locomotion::Force>([](auto &locomotion) {
-							locomotion.vel.y = 0;
-						});
+
+						if (IsColliding(scene, TcToRect(transform, collider), collision))
+						{
+							entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
+									transform.pos.y -= collision.height * ((vel.y > 0) - (vel.y < 0));
+							});
+							entity.template update<Components::Locomotion::Force>([](auto &locomotion) {
+								locomotion.vel.y = 0;
+							});
+						}
 					}
 			});
 		}
