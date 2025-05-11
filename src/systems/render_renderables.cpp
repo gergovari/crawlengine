@@ -3,9 +3,11 @@
 #include "misc/raylib_extended.hpp"
 #include <entt/entt.hpp>
 
-#include "components/components.hpp"
 #include "scene/scene.hpp"
 #include "services/renderers/renderer.hpp"
+
+#include "components/camera.hpp"
+#include "components/colored_rect.hpp"
 
 namespace Systems
 {

@@ -1,10 +1,14 @@
 #include "systems/area.hpp"
 
-#include "components/components.hpp"
 #include "entity/entity.hpp"
-#include "events/events.hpp"
 #include "misc/raylib_extended.hpp"
 #include "scene/scene.hpp"
+
+#include "components/transform.hpp"
+#include "components/area.hpp"
+
+#include "events/area/enter.hpp"
+#include "events/area/exit.hpp"
 
 namespace Systems
 {

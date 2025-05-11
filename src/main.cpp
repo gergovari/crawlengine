@@ -6,15 +6,40 @@
 
 #include "misc/raylib_extended.hpp"
 
-#include "components/components.hpp"
-#include "services/services.hpp"
-#include "systems/systems.hpp"
-
-#include "events/events.hpp"
-
 #include "entity/entity.hpp"
 #include "scene/renderables.hpp"
 #include "scene/scene.hpp"
+
+
+#include "systems/system.hpp"
+#include "systems/service_wrapper.hpp"
+
+#include "systems/locomotion/force.hpp"
+#include "systems/locomotion/multiplier.hpp"
+
+#include "systems/steering/player.hpp"
+#include "systems/steering/test.hpp"
+
+#include "systems/render_renderables.hpp"
+#include "systems/follow_camera_targets.hpp"
+#include "systems/area.hpp"
+
+
+#include "services/inputs/raylib.hpp"
+#include "services/renderers/raylib.hpp"
+
+
+#include "components/colored_rect.hpp"
+#include "components/camera.hpp"
+
+#include "components/locomotion/multiplier.hpp"
+#include "components/locomotion/force.hpp"
+#include "components/locomotion/heading.hpp"
+
+#include "components/steering/player.hpp"
+#include "components/steering/test.hpp"
+
+#include "components/tags/renderable.hpp"
 
 /* TODO
  *

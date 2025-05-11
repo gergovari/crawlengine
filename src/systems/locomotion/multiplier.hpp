@@ -1,6 +1,8 @@
 #pragma once
 
-#include "events/events.hpp"
+#include "events/area/enter.hpp"
+#include "events/area/exit.hpp"
+
 #include "systems/system.hpp"
 
 namespace Systems

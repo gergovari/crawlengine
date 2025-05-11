@@ -1,7 +1,11 @@
 #include "systems/steering/test.hpp"
 
-#include "components/components.hpp"
 #include "scene/scene.hpp"
+
+#include "components/transform.hpp"
+
+#include "components/steering/test.hpp"
+#include "components/locomotion/heading.hpp"
 
 namespace Systems
 {

@@ -1,9 +1,11 @@
 #include "systems/steering/player.hpp"
 
-#include "components/components.hpp"
 #include "scene/scene.hpp"
 
-#include "services/services.hpp"
+#include "services/inputs/input.hpp"
+
+#include "components/locomotion/heading.hpp"
+#include "components/steering/player.hpp"
 
 namespace Systems
 {

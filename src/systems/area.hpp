@@ -1,7 +1,10 @@
 #pragma once
 
-#include "components/components.hpp"
 #include "systems/system.hpp"
+
+#include "components/transform.hpp"
+#include "components/area.hpp"
+
 #include <unordered_map>
 #include <vector>
 

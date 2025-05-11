@@ -1,6 +1,8 @@
 #include "scene/collidables.hpp"
 
-#include "components/components.hpp"
+#include "components/collider.hpp"
+#include "components/transform.hpp"
+
 #include "entity/entity.hpp"
 #include "scene/scene.hpp"
 

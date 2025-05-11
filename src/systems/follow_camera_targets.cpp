@@ -1,7 +1,9 @@
 #include "systems/follow_camera_targets.hpp"
 
-#include "components/components.hpp"
 #include "scene/scene.hpp"
+
+#include "components/camera.hpp"
+#include "components/transform.hpp"
 
 namespace Systems
 {

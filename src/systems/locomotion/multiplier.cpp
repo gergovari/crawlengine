@@ -1,8 +1,14 @@
 #include "systems/locomotion/multiplier.hpp"
 
-#include "components/components.hpp"
-#include "events/events.hpp"
 #include "scene/scene.hpp"
+
+#include "events/area/enter.hpp"
+#include "events/area/exit.hpp"
+
+#include "components/area.hpp"
+
+#include "components/locomotion/velocity.hpp"
+#include "components/locomotion/multiplier.hpp"
 
 namespace Systems
 {

@@ -4,6 +4,12 @@
 #include "misc/raylib_extended.hpp"
 #include "scene/scene.hpp"
 
+#include "components/transform.hpp"
+#include "components/collider.hpp"
+
+#include "components/locomotion/force.hpp"
+#include "components/locomotion/heading.hpp"
+
 namespace Systems
 {
 	namespace Locomotion

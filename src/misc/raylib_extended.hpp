@@ -1,6 +1,8 @@
 #pragma once
 
-#include "components/components.hpp"
+#include "components/transform.hpp"
+#include "components/collider.hpp"
+#include "components/area.hpp"
 
 class Entity;
 class Camera2D;

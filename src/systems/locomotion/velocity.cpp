@@ -4,6 +4,11 @@
 #include "misc/raylib_extended.hpp"
 #include "scene/scene.hpp"
 
+#include "components/transform.hpp"
+#include "components/collider.hpp"
+#include "components/locomotion/velocity.hpp"
+#include "components/locomotion/heading.hpp"
+
 namespace Systems
 {
 	namespace Locomotion

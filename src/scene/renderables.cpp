@@ -1,8 +1,12 @@
 
 #include "scene/renderables.hpp"
-#include "components/components.hpp"
 #include "entity/entity.hpp"
 #include "scene/scene.hpp"
+
+#include "components/transform.hpp"
+#include "components/colored_rect.hpp"
+
+#include "components/tags/renderable.hpp"
 
 #define SPATIAL_UNIT 50
 
