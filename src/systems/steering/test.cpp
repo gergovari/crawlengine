@@ -5,36 +5,24 @@
 
 namespace Systems
 {
-    namespace Steering
-    {
-        void Test::tick(Scene &scene)
-        {
-            scene.each<Components::Steering::Test, Components::Locomotion::Velocity>(
-                [](const auto &test, auto &locomotion) {
-                    locomotion.targetSpeed = test.speed;
-                    Vector2 in;
+	namespace Steering
+	{
+		void Test::tick(Scene &scene)
+		{
+			scene.eachEntity<Components::Steering::Test, 
+				Components::Locomotion::Velocity, Components::Locomotion::Heading, Components::Transform>(
+						[this](auto &entity, const auto &test, auto &locomotion, auto &heading, const auto &transform) {
+						Vector2 in = seek.calculate(transform.pos, heading.dir);
+						entity.template update<Components::Locomotion::Velocity>([&test](auto &locomotion) {
+							locomotion.speed = test.speed;
+						});
 
-                    if ((int)GetTime() % 2 == 0)
-                    {
-                        in = {1, 0};
-                    }
-                    else if ((int)GetTime() % 3 == 0)
-                    {
-                        in = {0, 1};
-                    }
-                    else if ((int)GetTime() % 8 == 0)
-                    {
-                        in = {-1, 0};
-                    }
-                    else
-                    {
-                        in = {0, -1};
-                    }
+						entity.template update<Components::Locomotion::Heading>([&in](auto &heading) {
+							heading.dir = in;
+						});
+			});
+		}
 
-                    locomotion.setVelocity(Vector2Scale(in, locomotion.targetSpeed));
-                });
-        }
-
-    }
+	}
 
 }

@@ -6,11 +6,9 @@ namespace Components
 {
 	namespace Locomotion
 	{
-		struct Velocity
+		struct Heading
 		{
-			float speed = 0;
-
-			float multiplier = 1;
+			raylib::Vector2 dir;
 		};
 	}
 }

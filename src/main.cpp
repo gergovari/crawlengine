@@ -109,6 +109,7 @@ void addPlayer(Scene &scene)
 
     entity.add<Components::Transform>(Vector2{PLAYER_SPAWN_X * TILE_SIZE, PLAYER_SPAWN_Y * TILE_SIZE});
     entity.add<Components::Locomotion::Velocity>();
+    entity.add<Components::Locomotion::Heading>();
     entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
     entity.add<Components::Steering::Player>();
 
@@ -136,6 +137,7 @@ void addEnemy(Scene &scene)
     entity.add<Components::Collider>(Vector2{PLAYER_SIZE, PLAYER_SIZE});
 
     entity.add<Components::Locomotion::Velocity>();
+    entity.add<Components::Locomotion::Heading>();
 
     entity.add<Components::Steering::Test>();
     entity.get<Components::Steering::Test>().speed = WALK_SPEED;

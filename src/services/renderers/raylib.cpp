@@ -5,7 +5,7 @@
 /* TODO: customizable window title */
 Services::Renderers::Raylib::Raylib(size_t w, size_t h) : window(w, h, "crawlEngine")
 {
-    SetTargetFPS(60);
+    SetTargetFPS(120);
 }
 
 void Services::Renderers::Raylib::draw(Services::Renderers::ColoredShape<Rectangle> rect, raylib::Camera2D *cam)

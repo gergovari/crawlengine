@@ -6,39 +6,40 @@
 
 namespace Systems
 {
-    namespace Locomotion
-    {
-        void Velocity::tick(Scene &scene)
-        {
-            scene.eachEntity<Components::Transform, Components::Locomotion::Velocity, Components::Collider>(
-                [&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &collider) {
-                    Rectangle collision;
+	namespace Locomotion
+	{
+		void Velocity::tick(Scene &scene)
+		{
+			scene.eachEntity<Components::Transform, 
+				Components::Locomotion::Velocity, Components::Locomotion::Heading, Components::Collider>(
+					[&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &heading, const auto &collider) {
+					Rectangle collision;
 
-                    if (Vector2LengthSqr(locomotion.vel) != 0)
-                    {
-                        entity.template update<Components::Transform>([&locomotion](auto &transform) {
-                            transform.pos.x += locomotion.vel.x * locomotion.multiplier;
-                        });
+					if (heading.dir.LengthSqr() != 0)
+					{
+						raylib::Vector2 vel = heading.dir.Scale(locomotion.speed).Scale(GetFrameTime());
 
-                        if (IsColliding(scene, TcToRect(transform, collider), collision))
-                        {
-                            entity.template update<Components::Transform>([&collision, &locomotion](auto &transform) {
-                                transform.pos.x -= collision.width * ((locomotion.vel.x > 0) - (locomotion.vel.x < 0));
-                            });
-                        }
+						entity.template update<Components::Transform>([&vel, &locomotion](auto &transform) {
+								transform.pos.x += vel.x * locomotion.multiplier;
+								});
+						if (IsColliding(scene, TcToRect(transform, collider), collision))
+						{
+							entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
+									transform.pos.x -= collision.width * ((vel.x > 0) - (vel.x < 0));
+									});
+						}
+						entity.template update<Components::Transform>([&vel, &locomotion](auto &transform) {
+								transform.pos.y += vel.y * locomotion.multiplier;
+								});
 
-                        entity.template update<Components::Transform>([&locomotion](auto &transform) {
-                            transform.pos.y += locomotion.vel.y * locomotion.multiplier;
-                        });
-
-                        if (IsColliding(scene, TcToRect(transform, collider), collision))
-                        {
-                            entity.template update<Components::Transform>([&collision, &locomotion](auto &transform) {
-                                transform.pos.y -= collision.height * ((locomotion.vel.y > 0) - (locomotion.vel.y < 0));
-                            });
-                        }
-                    }
-                });
-        }
-    }
+						if (IsColliding(scene, TcToRect(transform, collider), collision))
+						{
+							entity.template update<Components::Transform>([&vel, &collision, &locomotion](auto &transform) {
+									transform.pos.y -= collision.height * ((vel.y > 0) - (vel.y < 0));
+									});
+						}
+					}
+					});
+		}
+	}
 }
