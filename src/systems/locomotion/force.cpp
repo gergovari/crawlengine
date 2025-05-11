@@ -20,16 +20,17 @@ namespace Systems
 				[&scene](auto &entity, const auto &transform, const auto &locomotion, const auto &heading, const auto &collider) {
 					Rectangle collision;
 					auto delta = GetFrameTime();
-					auto gravityAccel = 9.81;
-					auto frictionCoeff = .1;
+					auto gravityAccel = 1000;
+					auto frictionCoeff = .9;
 
-					auto inForce = heading.dir.Scale(locomotion.max);
+					auto inForce = heading.dir.Scale(locomotion.maxForce);
 					auto friction = locomotion.vel.Normalize().Scale(frictionCoeff * locomotion.mass * gravityAccel);
 					auto force = inForce - friction;
 
 					auto accel = force.Scale(1/locomotion.mass);
 					entity.template update<Components::Locomotion::Force>([&delta, &accel](auto &locomotion) {
 						locomotion.vel += accel.Scale(delta);
+						locomotion.vel = locomotion.vel.Clamp(-locomotion.maxVelocity, locomotion.maxVelocity);
 					});
 					auto vel = locomotion.vel;
 
